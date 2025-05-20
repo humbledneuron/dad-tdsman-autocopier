@@ -72,6 +72,11 @@ def transfer_to_excel(csv_files, excel_file, log_widget):
         wb = copy(rb)
         ws = wb.get_sheet(employee_sheet_index)
         
+        # Clear existing data except header
+        for row in range(1, employee_sheet.nrows):
+            for col in range(employee_sheet.ncols):
+                ws.write(row, col, '')
+        
         column_mappings = {
             'Employee Serial No (313)': ['Employee Serial No (313)', 'Employee Serial No(313)', 'Employee Serial No'],
             'Challan Serial Reference (301)': ['Challan Serial Reference (301)', 'Challan Serial Reference(301)', 'Challan Serial Reference'],
@@ -120,8 +125,7 @@ def transfer_to_excel(csv_files, excel_file, log_widget):
         style_date.font = font
         style_date.num_format_str = 'DD/MM/YYYY'
         
-        start_row = employee_sheet.nrows
-        current_row = start_row
+        current_row = 1  # Start from row 1 (after header)
         total_processed = 0
         
         for file_idx, csv_file in enumerate(valid_csv_files):
