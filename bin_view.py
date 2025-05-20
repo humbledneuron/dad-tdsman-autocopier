@@ -1,4 +1,5 @@
 import time
+import json
 from tkinter import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -29,12 +30,8 @@ def start_browser_and_fill_fields():
     wait = WebDriverWait(driver, 10)
 
     wait.until(EC.presence_of_element_located((By.NAME, "tan"))).send_keys(tan)
-    
-    form_type_dropdown = wait.until(EC.presence_of_element_located((By.NAME, "formtype")))
-    Select(form_type_dropdown).select_by_visible_text(form_type)
-
+    Select(wait.until(EC.presence_of_element_located((By.NAME, "formtype")))).select_by_visible_text(form_type)
     wait.until(EC.presence_of_element_located((By.NAME, "ain"))).send_keys(ain)
-
     Select(wait.until(EC.presence_of_element_located((By.NAME, "fmonth")))).select_by_visible_text(from_month)
     Select(wait.until(EC.presence_of_element_located((By.NAME, "fyear")))).select_by_visible_text(from_year)
     Select(wait.until(EC.presence_of_element_located((By.NAME, "tmonth")))).select_by_visible_text(to_month)
@@ -53,13 +50,53 @@ def submit_captcha_and_view_bin():
         driver.find_element(By.NAME, "captcha").send_keys(captcha)
         driver.find_element(By.XPATH, "//input[@value='View BIN Details']").click()
         print("CAPTCHA submitted. Button clicked.")
+        time.sleep(3)
+        extract_bin_data()
     except Exception as e:
         print(f"Error submitting CAPTCHA: {e}")
 
+def extract_bin_data():
+    global driver
+    try:
+        rows = driver.find_elements(By.XPATH, "//tr[contains(@class, 'tabledetails')]")
+        data_list = []
 
+        for row in rows:
+            cols = row.find_elements(By.TAG_NAME, "td")
+            if len(cols) >= 9:
+                record = {
+                    "Sr No.": cols[0].text.strip(),
+                    "AIN": cols[1].text.strip(),
+                    "AO Name": cols[2].text.strip(),
+                    "Receipt Number": cols[3].text.strip(),
+                    "DDO Serial No.": cols[4].text.strip(),
+                    "Date": cols[5].text.strip(),
+                    "Nature of Payment": cols[6].text.strip(),
+                    "Amount": "",  # Amount input field
+                    "Check": "checked" if cols[8].find_element(By.TAG_NAME, "input").is_selected() else "unchecked"
+                }
+                data_list.append(record)
+
+        json_data = json.dumps(data_list, indent=4)
+        print("BIN Table Data:\n", json_data)
+
+        show_data_popup(json_data)
+
+    except Exception as e:
+        print(f"Error extracting table data: {e}")
+
+def show_data_popup(data):
+    popup = Toplevel(root)
+    popup.title("BIN Table Data")
+    popup.geometry("700x400")
+    text_widget = Text(popup, wrap=WORD)
+    text_widget.insert(END, data)
+    text_widget.pack(expand=True, fill=BOTH)
+
+# GUI setup
 root = Tk()
 root.title("BIN View Automation")
-root.geometry("500x550")
+root.geometry("500x600")
 
 Label(root, text="TAN:").pack()
 tan_entry = Entry(root)
@@ -83,7 +120,9 @@ ain_entry.pack()
 
 Label(root, text="From Month & Year:").pack()
 from_month_var = StringVar(value="April")
-from_month_menu = OptionMenu(root, from_month_var, *["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"])
+from_month_menu = OptionMenu(root, from_month_var, *[
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"])
 from_month_menu.pack()
 
 from_year_var = StringVar(value="2023")
@@ -92,7 +131,9 @@ from_year_menu.pack()
 
 Label(root, text="To Month & Year:").pack()
 to_month_var = StringVar(value="June")
-to_month_menu = OptionMenu(root, to_month_var, *["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"])
+to_month_menu = OptionMenu(root, to_month_var, *[
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"])
 to_month_menu.pack()
 
 to_year_var = StringVar(value="2023")
