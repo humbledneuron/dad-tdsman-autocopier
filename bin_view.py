@@ -9,6 +9,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from datetime import datetime
 
 driver = None
 
@@ -81,7 +82,7 @@ def extract_bin_data():
                     "Date": cols[5].text.strip(),
                     # "Nature of Payment": cols[6].text.strip(),
                     # "Amount": cols[7].text.strip(),
-                    "Check": "checked" if cols[8].find_element(By.TAG_NAME, "input").is_selected() else "unchecked"
+                    # "Check": "checked" if cols[8].find_element(By.TAG_NAME, "input").is_selected() else "unchecked"
                 }
                 data_list.append(record)
 
@@ -142,26 +143,26 @@ ain_entry.pack(side=LEFT, fill=X, expand=True)
 from_date_frame = Frame(main_frame)
 from_date_frame.pack(fill=X, pady=5)
 Label(from_date_frame, text="From Month & Year:").pack(side=LEFT)
-from_month_var = StringVar(value="April")
+from_month_var = StringVar(value=datetime.now().strftime("%B"))
 from_month_menu = OptionMenu(from_date_frame, from_month_var, *[
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"])
 from_month_menu.pack(side=LEFT, padx=5)
-from_year_var = StringVar(value="2023")
-from_year_menu = OptionMenu(from_date_frame, from_year_var, *[str(y) for y in range(2010, 2031)])
+from_year_var = StringVar(value=str(datetime.now().year))
+from_year_menu = OptionMenu(from_date_frame, from_year_var, *[str(y) for y in range(datetime.now().year - 5, datetime.now().year + 6)])
 from_year_menu.pack(side=LEFT)
 
 # To Date Section
 to_date_frame = Frame(main_frame)
 to_date_frame.pack(fill=X, pady=5)
 Label(to_date_frame, text="To Month & Year:").pack(side=LEFT)
-to_month_var = StringVar(value="June")
+to_month_var = StringVar(value=datetime.now().strftime("%B"))
 to_month_menu = OptionMenu(to_date_frame, to_month_var, *[
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"])
 to_month_menu.pack(side=LEFT, padx=5)
-to_year_var = StringVar(value="2023")
-to_year_menu = OptionMenu(to_date_frame, to_year_var, *[str(y) for y in range(2010, 2031)])
+to_year_var = StringVar(value=str(datetime.now().year))
+to_year_menu = OptionMenu(to_date_frame, to_year_var, *[str(y) for y in range(datetime.now().year - 5, datetime.now().year + 6)])
 to_year_menu.pack(side=LEFT)
 
 # CAPTCHA Section
