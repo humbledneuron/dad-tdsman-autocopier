@@ -77,6 +77,12 @@ def process_challan_details(challan_csv, excel_file, rb, wb, log_widget):
             'BSR Code / 24G Receipt No (309)': ['BSR Code / 24G Receipt No (309)', 'BSR Code', '24G Receipt No', 'Receipt No'],
             'Transfer Voucher/Challan Serial No (310)': ['Transfer Voucher/Challan Serial No (310)', 'Challan Serial No', 'DDO Serial No'],
             'Date on Tax Deposited (dd/mm/yyyy) (311)': ['Date on Tax Deposited (dd/mm/yyyy) (311)', 'Date on Tax Deposited', 'Date'],
+            'Surcharge': ['Surcharge', 'Surcharge ()', 'surcharge'],
+            'Education Cess (303)': ['Education Cess (303)', 'Education Cess', 'Cess'],
+            'Interest (304)': ['Interest (304)', 'Interest', 'Interest Amount'],
+            'Fee (305)': ['Fee (305)', 'Fee', 'Fee Amount'],
+            'Others (306)': ['Others (306)', 'Others', 'Other Amount'],
+            'Whether TDS Deposited by Book Entry (308)': ['Whether TDS Deposited by Book Entry (308)', 'Book Entry', 'Book Entry (308)'],
             'TDS (302)': ['TDS (302)', 'TDS', 'Tax Deducted at Source'],
             'Total Tax Deposited (307)': ['Total Tax Deposited (307)', 'Total Tax Deposited', 'Total Tax']
         }
@@ -148,6 +154,12 @@ def process_challan_details(challan_csv, excel_file, rb, wb, log_widget):
             row_idx = start_row + idx
             
             ws_challan.write(row_idx, column_indices['BSR Code / 24G Receipt No (309)'], receipt_num, style_regular)
+            ws_challan.write(row_idx, column_indices['Surcharge'], 1, style_regular)
+            ws_challan.write(row_idx, column_indices['Education Cess (303)'], 0, style_regular)
+            ws_challan.write(row_idx, column_indices['Interest (304)'], 0, style_regular)
+            ws_challan.write(row_idx, column_indices['Fee (305)'], 0, style_regular)
+            ws_challan.write(row_idx, column_indices['Others (306)'], 0, style_regular)
+            ws_challan.write(row_idx, column_indices['Whether TDS Deposited by Book Entry (308)'], 'N', style_regular)
             # Format DDO Serial No as text with leading apostrophe
             ws_challan.write(row_idx, column_indices['Transfer Voucher/Challan Serial No (310)'], ddo_serial, style_text)
             ws_challan.write(row_idx, column_indices['TDS (302)'], amt, style_regular)
