@@ -76,7 +76,9 @@ def process_challan_details(challan_csv, excel_file, rb, wb, log_widget):
         column_mappings = {
             'BSR Code / 24G Receipt No (309)': ['BSR Code / 24G Receipt No (309)', 'BSR Code', '24G Receipt No', 'Receipt No'],
             'Transfer Voucher/Challan Serial No (310)': ['Transfer Voucher/Challan Serial No (310)', 'Challan Serial No', 'DDO Serial No'],
-            'Date on Tax Deposited (dd/mm/yyyy) (311)': ['Date on Tax Deposited (dd/mm/yyyy) (311)', 'Date on Tax Deposited', 'Date']
+            'Date on Tax Deposited (dd/mm/yyyy) (311)': ['Date on Tax Deposited (dd/mm/yyyy) (311)', 'Date on Tax Deposited', 'Date'],
+            'TDS (302)': ['TDS (302)', 'TDS', 'Tax Deducted at Source'],
+            'Total Tax Deposited (307)': ['Total Tax Deposited (307)', 'Total Tax Deposited', 'Total Tax']
         }
         
         column_indices = {}
@@ -141,11 +143,15 @@ def process_challan_details(challan_csv, excel_file, rb, wb, log_widget):
             
             date_obj = parse_date(date_str)
             
+            amt = row['Amount'] if 'Amount' in row else ''
+
             row_idx = start_row + idx
             
             ws_challan.write(row_idx, column_indices['BSR Code / 24G Receipt No (309)'], receipt_num, style_regular)
             # Format DDO Serial No as text with leading apostrophe
             ws_challan.write(row_idx, column_indices['Transfer Voucher/Challan Serial No (310)'], ddo_serial, style_text)
+            ws_challan.write(row_idx, column_indices['TDS (302)'], amt, style_regular)
+            ws_challan.write(row_idx, column_indices['Total Tax Deposited (307)'], amt, style_regular)
             
             if isinstance(date_obj, datetime):
                 ws_challan.write(row_idx, column_indices['Date on Tax Deposited (dd/mm/yyyy) (311)'], date_obj, style_date)
