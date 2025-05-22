@@ -28,7 +28,21 @@ def start_browser_and_fill_fields():
 
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    
+    try:
+        service = ChromeService(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
+    except Exception as e:
+        print(f"Error initializing ChromeDriver: {e}")
+        # Fallback to direct ChromeDriver path
+        try:
+            driver = webdriver.Chrome(options=options)
+        except Exception as e:
+            print(f"Fallback also failed: {e}")
+            return
+
     driver.get("https://onlineservices.tin.egov-nsdl.com/TIN/JSP/etbaf/ViewBIN.jsp")
 
     wait = WebDriverWait(driver, 10)
@@ -387,9 +401,35 @@ main_frame.configure(padx=20, pady=20)
 tan_frame = Frame(main_frame)
 tan_frame.pack(fill=X, pady=5)
 Label(tan_frame, text="TAN:").pack(side=LEFT)
-tan_entry = Entry(tan_frame)
+tan_entry = Entry(tan_frame, width=10)
 tan_entry.insert(0, "HYDH01739D")
 tan_entry.pack(side=LEFT, fill=X, expand=True)
+
+def validate_tan_format(*args):
+    value = tan_entry.get().upper()
+    new_value = ""
+    
+    # Process each character based on its position
+    for i, char in enumerate(value):
+        if i < 4:  # First 4 positions must be letters
+            if char.isalpha():
+                new_value += char
+        elif i < 9:  # Next 5 positions must be digits
+            if char.isdigit():
+                new_value += char
+        elif i == 9:  # Last position must be a letter
+            if char.isalpha():
+                new_value += char
+    
+    # Limit to 10 characters
+    new_value = new_value[:10]
+    
+    tan_entry.delete(0, END)
+    tan_entry.insert(0, new_value)
+
+# Bind to both KeyRelease and FocusOut events
+tan_entry.bind('<KeyRelease>', validate_tan_format)
+tan_entry.bind('<FocusOut>', validate_tan_format)
 
 # Form Type Section
 form_frame = Frame(main_frame)
