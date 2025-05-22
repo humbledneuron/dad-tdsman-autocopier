@@ -344,6 +344,13 @@ def create_gui():
     root.title("TDS Data Transfer Tool")
     root.geometry("700x600")
     
+    # Add checkbox at the top
+    checkbox_var = tk.BooleanVar()
+    checkbox_frame = ttk.Frame(root)
+    checkbox_frame.pack(padx=10, pady=5, fill="x")
+    checkbox = ttk.Checkbutton(checkbox_frame, text="I have checked all the Entered Details and confirm it is correct", variable=checkbox_var)
+    checkbox.pack(side="left")
+    
     file_frame = ttk.LabelFrame(root, text="File Selection")
     file_frame.pack(padx=10, pady=10, fill="x")
     
@@ -417,6 +424,10 @@ def create_gui():
     log_text.config(yscrollcommand=scrollbar.set)
     
     def process_files():
+        if not checkbox_var.get():
+            messagebox.showerror("Error", "Please check the confirmation checkbox before proceeding")
+            return
+            
         for i in range(3):
             csv_files[i] = csv_entries[i].get()
         
