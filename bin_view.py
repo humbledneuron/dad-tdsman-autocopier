@@ -525,22 +525,22 @@ def convert_to_uppercase(*args):
 captcha_entry.bind('<KeyRelease>', convert_to_uppercase)
 
 # Default amount section
-default_amount_frame = Frame(main_frame)
-default_amount_frame.pack(fill=X, pady=5)
-Label(default_amount_frame, text="Default Amount:").pack(side=LEFT)
-default_amount_entry = Entry(default_amount_frame)
-default_amount_entry.insert(0, "0")
-default_amount_entry.pack(side=LEFT, fill=X, expand=True)
+# default_amount_frame = Frame(main_frame)
+# default_amount_frame.pack(fill=X, pady=5)
+# Label(default_amount_frame, text="Default Amount:").pack(side=LEFT)
+# default_amount_entry = Entry(default_amount_frame)
+# default_amount_entry.insert(0, "0")
+# default_amount_entry.pack(side=LEFT, fill=X, expand=True)
 
-# Button to fill all fields with default amount
-def fill_with_default():
-    default_amount = default_amount_entry.get()
-    for _, entry, _ in amount_entries:
-        entry.delete(0, END)
-        entry.insert(0, default_amount)
-    print(f"Filled all amount fields with default amount: {default_amount}")
+# # Button to fill all fields with default amount
+# def fill_with_default():
+#     default_amount = default_amount_entry.get()
+#     for _, entry, _ in amount_entries:
+#         entry.delete(0, END)
+#         entry.insert(0, default_amount)
+#     print(f"Filled all amount fields with default amount: {default_amount}")
 
-Button(default_amount_frame, text="Fill All", command=fill_with_default).pack(side=RIGHT, padx=5)
+# Button(default_amount_frame, text="Fill All", command=fill_with_default).pack(side=RIGHT, padx=5)
 
 # Buttons Section
 button_frame = Frame(main_frame)
