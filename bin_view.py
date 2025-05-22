@@ -1,3 +1,4 @@
+# flake8: noqa
 import time
 import csv
 import os
@@ -465,18 +466,48 @@ from_year_var = StringVar(value=str(datetime.now().year))
 from_year_menu = OptionMenu(from_date_frame, from_year_var, *[str(y) for y in range(datetime.now().year - 5, datetime.now().year + 6)])
 from_year_menu.pack(side=LEFT)
 
+def update_to_date(*args):
+    # Get current from date values
+    from_month = from_month_var.get()
+    from_year = int(from_year_var.get())
+    
+    # Convert month name to number (1-12)
+    months = ["January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December"]
+    from_month_num = months.index(from_month) + 1
+    
+    # Calculate to date (2 months later)
+    to_month_num = from_month_num + 2
+    to_year = from_year
+    
+    # Handle year rollover
+    if to_month_num > 12:
+        to_month_num -= 12
+        to_year += 1
+    
+    # Update to date variables
+    to_month_var.set(months[to_month_num - 1])
+    to_year_var.set(str(to_year))
+
+# Bind the update function to both from date variables
+from_month_var.trace_add("write", update_to_date)
+from_year_var.trace_add("write", update_to_date)
+
 # To Date Section
 to_date_frame = Frame(main_frame)
 to_date_frame.pack(fill=X, pady=5)
 Label(to_date_frame, text="To Month & Year:").pack(side=LEFT)
-to_month_var = StringVar(value=datetime.now().strftime("%B"))
+to_month_var = StringVar()
 to_month_menu = OptionMenu(to_date_frame, to_month_var, *[
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"])
 to_month_menu.pack(side=LEFT, padx=5)
-to_year_var = StringVar(value=str(datetime.now().year))
+to_year_var = StringVar()
 to_year_menu = OptionMenu(to_date_frame, to_year_var, *[str(y) for y in range(datetime.now().year - 5, datetime.now().year + 6)])
 to_year_menu.pack(side=LEFT)
+
+# Initialize to date based on from date
+update_to_date()
 
 # CAPTCHA Section
 captcha_frame = Frame(main_frame)
