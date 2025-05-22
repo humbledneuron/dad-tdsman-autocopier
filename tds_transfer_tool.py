@@ -159,7 +159,7 @@ def process_challan_details(challan_csv, excel_file, rb, wb, log_widget):
             ws_challan.write(row_idx, column_indices['Interest (304)'], 0, style_regular)
             ws_challan.write(row_idx, column_indices['Fee (305)'], 0, style_regular)
             ws_challan.write(row_idx, column_indices['Others (306)'], 0, style_regular)
-            ws_challan.write(row_idx, column_indices['Whether TDS Deposited by Book Entry (308)'], 'N', style_regular)
+            ws_challan.write(row_idx, column_indices['Whether TDS Deposited by Book Entry (308)'], 'Y', style_regular)
             # Format DDO Serial No as text with leading apostrophe
             ws_challan.write(row_idx, column_indices['Transfer Voucher/Challan Serial No (310)'], ddo_serial, style_text)
             ws_challan.write(row_idx, column_indices['TDS (302)'], amt, style_regular)
