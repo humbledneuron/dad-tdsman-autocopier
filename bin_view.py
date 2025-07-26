@@ -126,6 +126,10 @@ class BinViewFrame(Frame):
             button_frame.pack(fill=X, pady=10)
             Button(button_frame, text="Apply Amounts & Check All Boxes", command=self.apply_amounts_and_check_boxes, bg="#4CAF50", fg="white").pack(side=LEFT, padx=5, fill=X, expand=True)
             Button(button_frame, text="Verify Amounts", command=self.verify_amounts, bg="#2196F3", fg="white").pack(side=LEFT, padx=5, fill=X, expand=True)
+            Button(button_frame, text="Extract BIN Data to Excel", 
+                   command=self.view_bin_data, 
+                   bg="#9C27B0", fg="white", 
+                   font=("Arial", 12, "bold")).pack(side=LEFT, padx=5, fill=X, expand=True)
             # Button(button_frame, text="Update Matching Amounts", command=self.update_matching_amounts, bg="#FF9800", fg="white").pack(side=LEFT, padx=5, fill=X, expand=True)
             self.print(f"Created {len(self.amount_entries)} amount entry fields for BIN records.")
         except Exception as e:
@@ -428,7 +432,7 @@ class BinViewFrame(Frame):
     def _build_ui(self):
         self.root = self.winfo_toplevel()
         self.root.title("BIN View Automation")
-        self.root.geometry("700x800")
+        self.root.geometry("700x810")
         self.main_frame_container = Frame(self)
         self.main_frame_container.pack(expand=True, fill=BOTH)
         self.scrollbar = Scrollbar(self.main_frame_container)
@@ -576,11 +580,3 @@ class BinViewFrame(Frame):
         # log_scrollbar = Scrollbar(self.log_text, command=self.log_text.yview)
         # log_scrollbar.pack(side=RIGHT, fill=Y)
         # self.log_text.config(yscrollcommand=log_scrollbar.set)
-        
-        # Extract BIN button at the bottom
-        extract_button_frame = Frame(self.main_frame)
-        extract_button_frame.pack(fill=X, pady=10)
-        Button(extract_button_frame, text="Extract BIN Data to Excel", 
-               command=self.view_bin_data, 
-               bg="#9C27B0", fg="white", 
-               font=("Arial", 12, "bold")).pack(fill=X, pady=5)
