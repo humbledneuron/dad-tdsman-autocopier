@@ -283,6 +283,7 @@ class BinViewFrame(Frame):
             # Same column mappings as TDS Transfer Tool
             column_mappings = {
                 'BSR Code / 24G Receipt No (309)': ['BSR Code / 24G Receipt No (309)', 'BSR Code', '24G Receipt No', 'Receipt No'],
+                'Running Serial No (301)': ['Running Serial No (301)', 'Running Serial No(301)', 'Running Serial No'],
                 'Transfer Voucher/Challan Serial No (310)': ['Transfer Voucher/Challan Serial No (310)', 'Challan Serial No', 'DDO Serial No'],
                 'Date on Tax Deposited (dd/mm/yyyy) (311)': ['Date on Tax Deposited (dd/mm/yyyy) (311)', 'Date on Tax Deposited', 'Date'],
                 'Surcharge': ['Surcharge', 'Surcharge ()', 'surcharge'],
@@ -356,6 +357,9 @@ class BinViewFrame(Frame):
                 ws_challan.write(row_idx, column_indices['Whether TDS Deposited by Book Entry (308)'], 'Y', style_regular)
                 # Format DDO Serial No as text with leading apostrophe
                 ws_challan.write(row_idx, column_indices['Transfer Voucher/Challan Serial No (310)'], ddo_serial, style_text)
+                # Add Running Serial No (301) with sequential numbering
+                running_serial_no = idx + 1  # Start from 1
+                ws_challan.write(row_idx, column_indices['Running Serial No (301)'], running_serial_no, style_regular)
                 ws_challan.write(row_idx, column_indices['TDS (302)'], amt, style_regular)
                 ws_challan.write(row_idx, column_indices['Total Tax Deposited (307)'], amt, style_regular)
                 
