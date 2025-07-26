@@ -16,15 +16,17 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
+import tkinter as tk
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
 class BinViewFrame(Frame):
-    def __init__(self, parent, shared_excel_entry):
+    def __init__(self, parent, shared_excel_entry, shared_log_text=None):
         super().__init__(parent)
         self.driver = None
         self.amount_entries = []
         self.shared_excel_entry = shared_excel_entry
+        self.shared_log_text = shared_log_text
         self._build_ui()
 
     def get_valid_chromedriver_path(self):
@@ -557,11 +559,11 @@ class BinViewFrame(Frame):
             message = " ".join(map(str, args))
             self.update_status(message, "green" if "✅" in message else "blue")
             self.original_print(*args, **kwargs)
-            # Also add to log if it exists
-            # if hasattr(self, 'log_text'):
-            #     timestamp = datetime.now().strftime("%H:%M:%S")
-            #     self.log_text.insert(END, f"[{timestamp}] {message}\n")
-            #     self.log_text.see(END)
+            # Also add to shared log if it exists
+            if self.shared_log_text:
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                self.shared_log_text.insert(tk.END, f"[BIN View] [{timestamp}] {message}\n")
+                self.shared_log_text.see(tk.END)
         self.print = custom_print
         
         # Add log section

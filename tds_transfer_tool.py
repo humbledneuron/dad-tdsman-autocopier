@@ -46,9 +46,10 @@ def install_required_libraries():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "xlwt", "xlutils"])
 
 def log_message(log_widget, message):
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    log_widget.insert(tk.END, f"[{timestamp}] {message}\n")
-    log_widget.see(tk.END)
+    if log_widget:
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        log_widget.insert(tk.END, f"[TDS Transfer] [{timestamp}] {message}\n")
+        log_widget.see(tk.END)
 
 def process_challan_details(challan_csv, excel_file, rb, wb, log_widget):
     if not challan_csv or not os.path.exists(challan_csv):
@@ -340,9 +341,10 @@ def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget):
         return False
 
 class TDSTransferFrame(ttk.Frame):
-    def __init__(self, parent, shared_excel_entry):
+    def __init__(self, parent, shared_excel_entry, shared_log_text=None):
         super().__init__(parent)
         self.shared_excel_entry = shared_excel_entry
+        self.shared_log_text = shared_log_text
         self._build_ui()
 
     def _build_ui(self):
@@ -398,18 +400,26 @@ class TDSTransferFrame(ttk.Frame):
                 messagebox.showerror("Error", "Please select a valid Excel file")
                 return
 
-                        # self.log_text.delete(1.0, tk.END)
-            
-            # log_message(self.log_text, "Starting data transfer process...")
+            # Log to shared log if available
+            if self.shared_log_text:
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Starting data transfer process...\n")
+                self.shared_log_text.see(tk.END)
             
             # Only pass employee CSVs, not challan_csv
-            success = transfer_to_excel(self.csv_files, None, excel_file, None)
+            success = transfer_to_excel(self.csv_files, None, excel_file, self.shared_log_text)
             
             if success:
-                # log_message(self.log_text, "Process completed successfully!")
+                if self.shared_log_text:
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Process completed successfully!\n")
+                    self.shared_log_text.see(tk.END)
                 messagebox.showinfo("Success", "Data transfer complete")
             else:
-                # log_message(self.log_text, "Process failed!")
+                if self.shared_log_text:
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Process failed!\n")
+                    self.shared_log_text.see(tk.END)
                 messagebox.showerror("Error", "Transfer failed. See log for details.")
 
         button_frame = ttk.Frame(self)
