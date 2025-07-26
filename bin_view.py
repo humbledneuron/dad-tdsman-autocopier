@@ -432,7 +432,7 @@ class BinViewFrame(Frame):
     def _build_ui(self):
         self.root = self.winfo_toplevel()
         self.root.title("BIN View Automation")
-        self.root.geometry("700x810")
+        self.root.geometry("700x710")
         self.main_frame_container = Frame(self)
         self.main_frame_container.pack(expand=True, fill=BOTH)
         self.scrollbar = Scrollbar(self.main_frame_container)
@@ -543,13 +543,13 @@ class BinViewFrame(Frame):
             self.captcha_entry.delete(0, END)
             self.captcha_entry.insert(0, value.upper())
         self.captcha_entry.bind('<KeyRelease>', convert_to_uppercase)
+        Button(captcha_frame, text="Submit CAPTCHA", 
+               command=self.submit_captcha, 
+               bg="#2196F3", fg="white").pack(side=LEFT, padx=5)
         
         # Action buttons
         button_frame = Frame(self.main_frame)
-        button_frame.pack(fill=X, pady=20)
-        Button(button_frame, text="Submit CAPTCHA", 
-               command=self.submit_captcha, 
-               bg="#2196F3", fg="white").pack(side=LEFT, padx=5)
+        button_frame.pack(fill=X, pady=0)
         status_frame = Frame(self.main_frame)
         status_frame.pack(fill=X, pady=10)
         self.status_label = Label(status_frame, text="Status: Ready", fg="blue")
