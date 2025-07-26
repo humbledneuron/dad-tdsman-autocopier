@@ -372,15 +372,15 @@ class TDSTransferFrame(ttk.Frame):
 
         # Remove Challan Details CSV selection
 
-        log_frame = ttk.LabelFrame(self, text="Log")
-        log_frame.pack(padx=10, pady=10, fill="both", expand=True)
-
-        self.log_text = tk.Text(log_frame, wrap="word", height=15)
-        self.log_text.pack(fill="both", expand=True, padx=5, pady=5)
-
-        scrollbar = ttk.Scrollbar(self.log_text, command=self.log_text.yview)
-        scrollbar.pack(side="right", fill="y")
-        self.log_text.config(yscrollcommand=scrollbar.set)
+                # log_frame = ttk.LabelFrame(self, text="Log")
+        # log_frame.pack(padx=10, pady=10, fill="both", expand=True)
+        
+        # self.log_text = tk.Text(log_frame, wrap="word", height=15)
+        # self.log_text.pack(fill="both", expand=True, padx=5, pady=5)
+        
+        # scrollbar = ttk.Scrollbar(self.log_text, command=self.log_text.yview)
+        # scrollbar.pack(side="right", fill="y")
+        # self.log_text.config(yscrollcommand=scrollbar.set)
 
         def process_files():
             for i in range(3):
@@ -398,18 +398,18 @@ class TDSTransferFrame(ttk.Frame):
                 messagebox.showerror("Error", "Please select a valid Excel file")
                 return
 
-            self.log_text.delete(1.0, tk.END)
-
-            log_message(self.log_text, "Starting data transfer process...")
-
+                        # self.log_text.delete(1.0, tk.END)
+            
+            # log_message(self.log_text, "Starting data transfer process...")
+            
             # Only pass employee CSVs, not challan_csv
-            success = transfer_to_excel(self.csv_files, None, excel_file, self.log_text)
-
+            success = transfer_to_excel(self.csv_files, None, excel_file, None)
+            
             if success:
-                log_message(self.log_text, "Process completed successfully!")
+                # log_message(self.log_text, "Process completed successfully!")
                 messagebox.showinfo("Success", "Data transfer complete")
             else:
-                log_message(self.log_text, "Process failed!")
+                # log_message(self.log_text, "Process failed!")
                 messagebox.showerror("Error", "Transfer failed. See log for details.")
 
         button_frame = ttk.Frame(self)

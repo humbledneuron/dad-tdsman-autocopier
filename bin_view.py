@@ -558,22 +558,22 @@ class BinViewFrame(Frame):
             self.update_status(message, "green" if "✅" in message else "blue")
             self.original_print(*args, **kwargs)
             # Also add to log if it exists
-            if hasattr(self, 'log_text'):
-                timestamp = datetime.now().strftime("%H:%M:%S")
-                self.log_text.insert(END, f"[{timestamp}] {message}\n")
-                self.log_text.see(END)
+            # if hasattr(self, 'log_text'):
+            #     timestamp = datetime.now().strftime("%H:%M:%S")
+            #     self.log_text.insert(END, f"[{timestamp}] {message}\n")
+            #     self.log_text.see(END)
         self.print = custom_print
         
         # Add log section
-        log_frame = LabelFrame(self.main_frame, text="Log")
-        log_frame.pack(fill=BOTH, expand=True, pady=10)
+        # log_frame = LabelFrame(self.main_frame, text="Log")
+        # log_frame.pack(fill=BOTH, expand=True, pady=10)
         
-        self.log_text = Text(log_frame, wrap=WORD, height=10)
-        self.log_text.pack(fill=BOTH, expand=True, padx=5, pady=5)
+        # self.log_text = Text(log_frame, wrap=WORD)
+        # self.log_text.pack(fill=BOTH, expand=True, padx=5, pady=5)
         
-        log_scrollbar = Scrollbar(self.log_text, command=self.log_text.yview)
-        log_scrollbar.pack(side=RIGHT, fill=Y)
-        self.log_text.config(yscrollcommand=log_scrollbar.set)
+        # log_scrollbar = Scrollbar(self.log_text, command=self.log_text.yview)
+        # log_scrollbar.pack(side=RIGHT, fill=Y)
+        # self.log_text.config(yscrollcommand=log_scrollbar.set)
         
         # Extract BIN button at the bottom
         extract_button_frame = Frame(self.main_frame)
