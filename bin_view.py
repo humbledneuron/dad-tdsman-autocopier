@@ -218,6 +218,17 @@ class BinViewFrame(Frame):
         except Exception as e:
             self.print(f"Error updating matching amounts: {e}")
 
+    def close_browser(self):
+        if self.driver:
+            try:
+                self.driver.quit()
+                self.driver = None
+                self.print("Browser closed successfully.")
+            except Exception as e:
+                self.print(f"Error closing browser: {e}")
+        else:
+            self.print("No browser is currently open.")
+
     def view_bin_data(self):
         if not self.driver:
             self.print("Browser not launched yet.")
@@ -348,6 +359,18 @@ class BinViewFrame(Frame):
         to_year_menu = OptionMenu(to_date_frame, self.to_year_var, *[str(y) for y in range(datetime.now().year - 5, datetime.now().year + 6)])
         to_year_menu.pack(side=LEFT)
         update_to_date()
+        
+        # Browser control buttons (above CAPTCHA)
+        browser_button_frame = Frame(self.main_frame)
+        browser_button_frame.pack(fill=X, pady=10)
+        Button(browser_button_frame, text="Start (Open Browser & Fill Form)", 
+               command=self.start_browser_and_fill_fields, 
+               bg="#4CAF50", fg="white").pack(side=LEFT, padx=5)
+        Button(browser_button_frame, text="Close Browser", 
+               command=self.close_browser, 
+               bg="#f44336", fg="white").pack(side=LEFT, padx=5)
+        
+        # CAPTCHA Section
         captcha_frame = Frame(self.main_frame)
         captcha_frame.pack(fill=X, pady=5)
         Label(captcha_frame, text="Enter CAPTCHA (visible in browser):").pack(side=LEFT)
@@ -358,11 +381,16 @@ class BinViewFrame(Frame):
             self.captcha_entry.delete(0, END)
             self.captcha_entry.insert(0, value.upper())
         self.captcha_entry.bind('<KeyRelease>', convert_to_uppercase)
+        
+        # Action buttons
         button_frame = Frame(self.main_frame)
         button_frame.pack(fill=X, pady=20)
-        Button(button_frame, text="Start (Open Browser & Fill Form)", command=self.start_browser_and_fill_fields).pack(side=LEFT, padx=5)
-        Button(button_frame, text="Submit CAPTCHA", command=self.submit_captcha).pack(side=LEFT, padx=5)
-        Button(button_frame, text="Extract BIN", command=self.view_bin_data).pack(side=LEFT, padx=5)
+        Button(button_frame, text="Submit CAPTCHA", 
+               command=self.submit_captcha, 
+               bg="#2196F3", fg="white").pack(side=LEFT, padx=5)
+        Button(button_frame, text="Extract BIN", 
+               command=self.view_bin_data, 
+               bg="#FF9800", fg="white").pack(side=LEFT, padx=5)
         status_frame = Frame(self.main_frame)
         status_frame.pack(fill=X, pady=10)
         self.status_label = Label(status_frame, text="Status: Ready", fg="blue")
