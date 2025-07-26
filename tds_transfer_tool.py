@@ -339,131 +339,141 @@ def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget):
                 
         return False
 
-def create_gui():
+class TDSTransferFrame(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self._build_ui()
+
+    def _build_ui(self):
+        # All code that was previously in create_gui goes here,
+        # but using self for all widgets and variables.
+        # Replace all variable usage with self.
+        # For example, self.checkbox_var = tk.BooleanVar(), etc.
+        self.checkbox_var = tk.BooleanVar()
+        checkbox_frame = ttk.Frame(self)
+        checkbox_frame.pack(padx=10, pady=5, fill="x")
+        checkbox = ttk.Checkbutton(checkbox_frame, text="I have checked all the Entered Details and confirm it is correct", variable=self.checkbox_var)
+        checkbox.pack(side="left")
+        
+        file_frame = ttk.LabelFrame(self, text="File Selection")
+        file_frame.pack(padx=10, pady=10, fill="x")
+        
+        self.csv_files = [None, None, None]
+        self.csv_entries = []
+        
+        for i in range(3):
+            csv_frame = ttk.Frame(file_frame)
+            csv_frame.pack(padx=5, pady=5, fill="x")
+            
+            ttk.Label(csv_frame, text=f"Employee CSV File {i+1}:").pack(side="left")
+            csv_entry = ttk.Entry(csv_frame, width=50)
+            csv_entry.pack(side="left", padx=5)
+            self.csv_entries.append(csv_entry)
+            
+            def browse_csv(idx=i):
+                filename = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+                if filename:
+                    self.csv_entries[idx].delete(0, tk.END)
+                    self.csv_entries[idx].insert(0, filename)
+                    self.csv_files[idx] = filename
+            
+            ttk.Button(csv_frame, text="Browse", command=browse_csv).pack(side="left")
+        
+        # Add Challan Details CSV selection
+        challan_frame = ttk.Frame(file_frame)
+        challan_frame.pack(padx=5, pady=5, fill="x")
+        
+        ttk.Label(challan_frame, text="Challan Details CSV:").pack(side="left")
+        self.challan_entry = ttk.Entry(challan_frame, width=50)
+        self.challan_entry.pack(side="left", padx=5)
+        
+        self.challan_csv = [None]
+        
+        def browse_challan():
+            filename = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
+            if filename:
+                self.challan_entry.delete(0, tk.END)
+                self.challan_entry.insert(0, filename)
+                self.challan_csv[0] = filename
+        
+        ttk.Button(challan_frame, text="Browse", command=browse_challan).pack(side="left")
+        
+        # XLS file selection
+        xls_frame = ttk.Frame(file_frame)
+        xls_frame.pack(padx=5, pady=5, fill="x")
+        
+        ttk.Label(xls_frame, text="Excel File:").pack(side="left")
+        self.xls_entry = ttk.Entry(xls_frame, width=50)
+        self.xls_entry.pack(side="left", padx=5)
+        
+        self.excel_file = [None]
+        
+        def browse_xls():
+            filename = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xls")])
+            if filename:
+                self.xls_entry.delete(0, tk.END)
+                self.xls_entry.insert(0, filename)
+                self.excel_file[0] = filename
+        
+        ttk.Button(xls_frame, text="Browse", command=browse_xls).pack(side="left")
+        
+        log_frame = ttk.LabelFrame(self, text="Log")
+        log_frame.pack(padx=10, pady=10, fill="both", expand=True)
+        
+        self.log_text = tk.Text(log_frame, wrap="word", height=15)
+        self.log_text.pack(fill="both", expand=True, padx=5, pady=5)
+        
+        scrollbar = ttk.Scrollbar(self.log_text, command=self.log_text.yview)
+        scrollbar.pack(side="right", fill="y")
+        self.log_text.config(yscrollcommand=scrollbar.set)
+
+        def process_files():
+            if not self.checkbox_var.get():
+                messagebox.showerror("Error", "Please check the confirmation checkbox before proceeding")
+                return
+                
+            for i in range(3):
+                self.csv_files[i] = self.csv_entries[i].get()
+            
+            self.challan_csv[0] = self.challan_entry.get()
+            self.excel_file[0] = self.xls_entry.get()
+            
+            valid_csv_files = [f for f in self.csv_files if f and os.path.exists(f)]
+            
+            if not valid_csv_files and (not self.challan_csv[0] or not os.path.exists(self.challan_csv[0])):
+                messagebox.showerror("Error", "Please select at least one valid CSV file")
+                return
+            
+            if not self.excel_file[0] or not os.path.exists(self.excel_file[0]):
+                messagebox.showerror("Error", "Please select a valid Excel file")
+                return
+            
+            self.log_text.delete(1.0, tk.END)
+            
+            log_message(self.log_text, "Starting data transfer process...")
+            
+            success = transfer_to_excel(self.csv_files, self.challan_csv[0], self.excel_file[0], self.log_text)
+            
+            if success:
+                log_message(self.log_text, "Process completed successfully!")
+                messagebox.showinfo("Success", "Data transfer complete")
+            else:
+                log_message(self.log_text, "Process failed!")
+                messagebox.showerror("Error", "Transfer failed. See log for details.")
+        
+        button_frame = ttk.Frame(self)
+        button_frame.pack(pady=10)
+        
+        process_button = ttk.Button(button_frame, text="Process Files", command=process_files)
+        process_button.pack(padx=5, pady=5)
+
+if __name__ == "__main__":
     root = tk.Tk()
     root.title("TDS Data Transfer Tool")
     root.geometry("700x600")
     
-    # Add checkbox at the top
-    checkbox_var = tk.BooleanVar()
-    checkbox_frame = ttk.Frame(root)
-    checkbox_frame.pack(padx=10, pady=5, fill="x")
-    checkbox = ttk.Checkbutton(checkbox_frame, text="I have checked all the Entered Details and confirm it is correct", variable=checkbox_var)
-    checkbox.pack(side="left")
-    
-    file_frame = ttk.LabelFrame(root, text="File Selection")
-    file_frame.pack(padx=10, pady=10, fill="x")
-    
-    csv_files = [None, None, None]
-    csv_entries = []
-    
-    for i in range(3):
-        csv_frame = ttk.Frame(file_frame)
-        csv_frame.pack(padx=5, pady=5, fill="x")
-        
-        ttk.Label(csv_frame, text=f"Employee CSV File {i+1}:").pack(side="left")
-        csv_entry = ttk.Entry(csv_frame, width=50)
-        csv_entry.pack(side="left", padx=5)
-        csv_entries.append(csv_entry)
-        
-        def browse_csv(idx=i):
-            filename = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-            if filename:
-                csv_entries[idx].delete(0, tk.END)
-                csv_entries[idx].insert(0, filename)
-                csv_files[idx] = filename
-        
-        ttk.Button(csv_frame, text="Browse", command=browse_csv).pack(side="left")
-    
-    # Add Challan Details CSV selection
-    challan_frame = ttk.Frame(file_frame)
-    challan_frame.pack(padx=5, pady=5, fill="x")
-    
-    ttk.Label(challan_frame, text="Challan Details CSV:").pack(side="left")
-    challan_entry = ttk.Entry(challan_frame, width=50)
-    challan_entry.pack(side="left", padx=5)
-    
-    challan_csv = [None]
-    
-    def browse_challan():
-        filename = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
-        if filename:
-            challan_entry.delete(0, tk.END)
-            challan_entry.insert(0, filename)
-            challan_csv[0] = filename
-    
-    ttk.Button(challan_frame, text="Browse", command=browse_challan).pack(side="left")
-    
-    # XLS file selection
-    xls_frame = ttk.Frame(file_frame)
-    xls_frame.pack(padx=5, pady=5, fill="x")
-    
-    ttk.Label(xls_frame, text="Excel File:").pack(side="left")
-    xls_entry = ttk.Entry(xls_frame, width=50)
-    xls_entry.pack(side="left", padx=5)
-    
-    excel_file = [None]
-    
-    def browse_xls():
-        filename = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xls")])
-        if filename:
-            xls_entry.delete(0, tk.END)
-            xls_entry.insert(0, filename)
-            excel_file[0] = filename
-    
-    ttk.Button(xls_frame, text="Browse", command=browse_xls).pack(side="left")
-    
-    log_frame = ttk.LabelFrame(root, text="Log")
-    log_frame.pack(padx=10, pady=10, fill="both", expand=True)
-    
-    log_text = tk.Text(log_frame, wrap="word", height=15)
-    log_text.pack(fill="both", expand=True, padx=5, pady=5)
-    
-    scrollbar = ttk.Scrollbar(log_text, command=log_text.yview)
-    scrollbar.pack(side="right", fill="y")
-    log_text.config(yscrollcommand=scrollbar.set)
-    
-    def process_files():
-        if not checkbox_var.get():
-            messagebox.showerror("Error", "Please check the confirmation checkbox before proceeding")
-            return
-            
-        for i in range(3):
-            csv_files[i] = csv_entries[i].get()
-        
-        challan_csv[0] = challan_entry.get()
-        excel_file[0] = xls_entry.get()
-        
-        valid_csv_files = [f for f in csv_files if f and os.path.exists(f)]
-        
-        if not valid_csv_files and (not challan_csv[0] or not os.path.exists(challan_csv[0])):
-            messagebox.showerror("Error", "Please select at least one valid CSV file")
-            return
-        
-        if not excel_file[0] or not os.path.exists(excel_file[0]):
-            messagebox.showerror("Error", "Please select a valid Excel file")
-            return
-        
-        log_text.delete(1.0, tk.END)
-        
-        log_message(log_text, "Starting data transfer process...")
-        
-        success = transfer_to_excel(csv_files, challan_csv[0], excel_file[0], log_text)
-        
-        if success:
-            log_message(log_text, "Process completed successfully!")
-            messagebox.showinfo("Success", "Data transfer complete")
-        else:
-            log_message(log_text, "Process failed!")
-            messagebox.showerror("Error", "Transfer failed. See log for details.")
-    
-    button_frame = ttk.Frame(root)
-    button_frame.pack(pady=10)
-    
-    process_button = ttk.Button(button_frame, text="Process Files", command=process_files)
-    process_button.pack(padx=5, pady=5)
+    # Create an instance of the frame and pack it
+    transfer_frame = TDSTransferFrame(root)
+    transfer_frame.pack(padx=10, pady=10, fill="both", expand=True)
     
     root.mainloop()
-
-if __name__ == "__main__":
-    create_gui()
