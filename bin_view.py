@@ -2,8 +2,12 @@
 import time
 import csv
 import os
+import warnings
+import xlrd
+import xlwt
+from xlutils.copy import copy
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -13,11 +17,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
 
+warnings.filterwarnings('ignore', category=UserWarning)
+
 class BinViewFrame(Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, shared_excel_entry):
         super().__init__(parent)
         self.driver = None
         self.amount_entries = []
+        self.shared_excel_entry = shared_excel_entry
         self._build_ui()
 
     def get_valid_chromedriver_path(self):
@@ -236,6 +243,150 @@ class BinViewFrame(Frame):
         time.sleep(3)
         self.extract_bin_data()
 
+    def write_bin_data_to_excel(self, data_list):
+        try:
+            excel_file = self.shared_excel_entry.get()
+            if not excel_file or not os.path.exists(excel_file):
+                self.print("Error: Please select a valid Excel file in the shared section above.")
+                return False
+            
+            # Create backup
+            backup_file = f"{excel_file}.backup"
+            try:
+                import shutil
+                shutil.copy2(excel_file, backup_file)
+                self.print(f"Created backup at '{backup_file}'")
+            except Exception as e:
+                self.print(f"Warning: Could not create backup: {e}")
+            
+            rb = xlrd.open_workbook(excel_file, formatting_info=True)
+            wb = copy(rb)
+            
+            # Find Challan Details sheet (same as TDS Transfer Tool)
+            challan_sheet_index = None
+            for idx, sheet_name in enumerate(rb.sheet_names()):
+                if sheet_name == 'Challan Details':
+                    challan_sheet_index = idx
+                    break
+                    
+            if challan_sheet_index is None:
+                self.print("Error: Challan Details sheet not found in Excel file")
+                return False
+                
+            challan_sheet = rb.sheet_by_index(challan_sheet_index)
+            self.print(f"Found Challan Details sheet with {challan_sheet.nrows} rows")
+            
+            header_row = [challan_sheet.cell_value(0, col) for col in range(challan_sheet.ncols)]
+            
+            ws_challan = wb.get_sheet(challan_sheet_index)
+            
+            # Same column mappings as TDS Transfer Tool
+            column_mappings = {
+                'BSR Code / 24G Receipt No (309)': ['BSR Code / 24G Receipt No (309)', 'BSR Code', '24G Receipt No', 'Receipt No'],
+                'Transfer Voucher/Challan Serial No (310)': ['Transfer Voucher/Challan Serial No (310)', 'Challan Serial No', 'DDO Serial No'],
+                'Date on Tax Deposited (dd/mm/yyyy) (311)': ['Date on Tax Deposited (dd/mm/yyyy) (311)', 'Date on Tax Deposited', 'Date'],
+                'Surcharge': ['Surcharge', 'Surcharge ()', 'surcharge'],
+                'Education Cess (303)': ['Education Cess (303)', 'Education Cess', 'Cess'],
+                'Interest (304)': ['Interest (304)', 'Interest', 'Interest Amount'],
+                'Fee (305)': ['Fee (305)', 'Fee', 'Fee Amount'],
+                'Others (306)': ['Others (306)', 'Others', 'Other Amount'],
+                'Whether TDS Deposited by Book Entry (308)': ['Whether TDS Deposited by Book Entry (308)', 'Book Entry', 'Book Entry (308)'],
+                'TDS (302)': ['TDS (302)', 'TDS', 'Tax Deducted at Source'],
+                'Total Tax Deposited (307)': ['Total Tax Deposited (307)', 'Total Tax Deposited', 'Total Tax']
+            }
+            
+            column_indices = {}
+            for col_key, possible_names in column_mappings.items():
+                column_indices[col_key] = None
+                for possible_name in possible_names:
+                    for col_idx, header in enumerate(header_row):
+                        if possible_name.lower() in header.lower():
+                            column_indices[col_key] = col_idx
+                            break
+                    if column_indices[col_key] is not None:
+                        break
+            
+            missing_columns = [col for col, idx in column_indices.items() if idx is None]
+            if missing_columns:
+                self.print(f"Warning: Columns not found in Challan Details sheet: {missing_columns}")
+                return False
+            
+            # Same formatting as TDS Transfer Tool
+            font = xlwt.Font()
+            font.name = 'Calibri'
+            font.height = 220
+
+            style_regular = xlwt.XFStyle()
+            style_regular.font = font
+            
+            # Create text style specifically for the Challan Serial No column
+            style_text = xlwt.XFStyle()
+            style_text.font = font
+            style_text.num_format_str = '@'  # Format as text
+            
+            style_date = xlwt.XFStyle()
+            style_date.font = font
+            style_date.num_format_str = 'DD/MM/YYYY'
+            
+            # Start at row 1 (after header) to overwrite existing data (same as TDS Transfer Tool)
+            start_row = 1
+            
+            for idx, record in enumerate(data_list):
+                receipt_num = str(record["Receipt Number"])
+                
+                # Force DDO Serial No to be treated as text with leading zeros (same as TDS Transfer Tool)
+                ddo_serial = str(record["DDO Serial No."])
+                if ddo_serial.isdigit():
+                    ddo_serial = str(ddo_serial)
+                
+                date_str = record["Date"]
+                date_obj = self.parse_date(date_str)
+                
+                amt = record["Amount"] if record["Amount"] else 0
+
+                row_idx = start_row + idx
+                
+                # Same writing logic as TDS Transfer Tool
+                ws_challan.write(row_idx, column_indices['BSR Code / 24G Receipt No (309)'], receipt_num, style_regular)
+                ws_challan.write(row_idx, column_indices['Surcharge'], 0, style_regular)
+                ws_challan.write(row_idx, column_indices['Education Cess (303)'], 0, style_regular)
+                ws_challan.write(row_idx, column_indices['Interest (304)'], 0, style_regular)
+                ws_challan.write(row_idx, column_indices['Fee (305)'], 0, style_regular)
+                ws_challan.write(row_idx, column_indices['Others (306)'], 0, style_regular)
+                ws_challan.write(row_idx, column_indices['Whether TDS Deposited by Book Entry (308)'], 'Y', style_regular)
+                # Format DDO Serial No as text with leading apostrophe
+                ws_challan.write(row_idx, column_indices['Transfer Voucher/Challan Serial No (310)'], ddo_serial, style_text)
+                ws_challan.write(row_idx, column_indices['TDS (302)'], amt, style_regular)
+                ws_challan.write(row_idx, column_indices['Total Tax Deposited (307)'], amt, style_regular)
+                
+                if isinstance(date_obj, datetime):
+                    ws_challan.write(row_idx, column_indices['Date on Tax Deposited (dd/mm/yyyy) (311)'], date_obj, style_date)
+                else:
+                    ws_challan.write(row_idx, column_indices['Date on Tax Deposited (dd/mm/yyyy) (311)'], date_str, style_regular)
+            
+            wb.save(excel_file)
+            self.print(f"✅ BIN data written to Challan Details sheet: {os.path.abspath(excel_file)}")
+            self.print(f"✅ Overwrote Challan Details with {len(data_list)} rows")
+            return True
+            
+        except Exception as e:
+            self.print(f"Error writing to Excel: {e}")
+            import traceback
+            error_details = traceback.format_exc()
+            self.print(f"Details: {error_details}")
+            return False
+
+    def parse_date(self, date_str):
+        try:
+            if isinstance(date_str, str):
+                parts = date_str.split('/')
+                if len(parts) == 3:
+                    day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
+                    return datetime(year, month, day)
+            return date_str
+        except Exception:
+            return date_str
+
     def extract_bin_data(self):
         try:
             rows = self.driver.find_elements(By.XPATH, "//tr[contains(@class, 'tabledetails')]")
@@ -258,12 +409,13 @@ class BinViewFrame(Frame):
             if not data_list:
                 self.print("No BIN records found.")
                 return
-            csv_file = "bin_table_data.csv"
-            with open(csv_file, mode="w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=data_list[0].keys())
-                writer.writeheader()
-                writer.writerows(data_list)
-            self.print(f"\n✅ BIN data saved to CSV: {os.path.abspath(csv_file)}")
+            
+            # Write to Excel instead of CSV
+            if self.write_bin_data_to_excel(data_list):
+                self.print(f"✅ Successfully extracted {len(data_list)} BIN records to Excel file.")
+            else:
+                self.print("❌ Failed to write BIN data to Excel file.")
+                
         except Exception as e:
             self.print(f"Error extracting table data: {e}")
 
@@ -388,9 +540,6 @@ class BinViewFrame(Frame):
         Button(button_frame, text="Submit CAPTCHA", 
                command=self.submit_captcha, 
                bg="#2196F3", fg="white").pack(side=LEFT, padx=5)
-        Button(button_frame, text="Extract BIN", 
-               command=self.view_bin_data, 
-               bg="#FF9800", fg="white").pack(side=LEFT, padx=5)
         status_frame = Frame(self.main_frame)
         status_frame.pack(fill=X, pady=10)
         self.status_label = Label(status_frame, text="Status: Ready", fg="blue")
@@ -404,4 +553,28 @@ class BinViewFrame(Frame):
             message = " ".join(map(str, args))
             self.update_status(message, "green" if "✅" in message else "blue")
             self.original_print(*args, **kwargs)
+            # Also add to log if it exists
+            if hasattr(self, 'log_text'):
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                self.log_text.insert(END, f"[{timestamp}] {message}\n")
+                self.log_text.see(END)
         self.print = custom_print
+        
+        # Add log section
+        log_frame = LabelFrame(self.main_frame, text="Log")
+        log_frame.pack(fill=BOTH, expand=True, pady=10)
+        
+        self.log_text = Text(log_frame, wrap=WORD, height=10)
+        self.log_text.pack(fill=BOTH, expand=True, padx=5, pady=5)
+        
+        log_scrollbar = Scrollbar(self.log_text, command=self.log_text.yview)
+        log_scrollbar.pack(side=RIGHT, fill=Y)
+        self.log_text.config(yscrollcommand=log_scrollbar.set)
+        
+        # Extract BIN button at the bottom
+        extract_button_frame = Frame(self.main_frame)
+        extract_button_frame.pack(fill=X, pady=10)
+        Button(extract_button_frame, text="Extract BIN Data to Excel", 
+               command=self.view_bin_data, 
+               bg="#9C27B0", fg="white", 
+               font=("Arial", 12, "bold")).pack(fill=X, pady=5)
