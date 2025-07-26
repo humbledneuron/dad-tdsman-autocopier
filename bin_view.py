@@ -16,6 +16,14 @@ from datetime import datetime
 driver = None
 amount_entries = []  # To store dynamically created entry fields
 
+def get_valid_chromedriver_path():
+    path = ChromeDriverManager().install()
+    # Check if it's a file and executable
+    if os.path.isfile(path) and os.access(path, os.X_OK):
+        return path
+    else:
+        raise RuntimeError(f"Invalid ChromeDriver binary at {path}. Please clear the webdriver_manager cache and try again.")
+
 def start_browser_and_fill_fields():
     global driver
 
@@ -33,7 +41,7 @@ def start_browser_and_fill_fields():
     options.add_argument("--disable-dev-shm-usage")
     
     try:
-        service = ChromeService(ChromeDriverManager().install())
+        service = ChromeService(get_valid_chromedriver_path())
         driver = webdriver.Chrome(service=service, options=options)
     except Exception as e:
         print(f"Error initializing ChromeDriver: {e}")
