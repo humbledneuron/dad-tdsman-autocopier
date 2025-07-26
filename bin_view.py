@@ -126,7 +126,7 @@ class BinViewFrame(Frame):
             button_frame.pack(fill=X, pady=10)
             Button(button_frame, text="Apply Amounts & Check All Boxes", command=self.apply_amounts_and_check_boxes, bg="#4CAF50", fg="white").pack(side=LEFT, padx=5, fill=X, expand=True)
             Button(button_frame, text="Verify Amounts", command=self.verify_amounts, bg="#2196F3", fg="white").pack(side=LEFT, padx=5, fill=X, expand=True)
-            Button(button_frame, text="Update Matching Amounts", command=self.update_matching_amounts, bg="#FF9800", fg="white").pack(side=LEFT, padx=5, fill=X, expand=True)
+            # Button(button_frame, text="Update Matching Amounts", command=self.update_matching_amounts, bg="#FF9800", fg="white").pack(side=LEFT, padx=5, fill=X, expand=True)
             self.print(f"Created {len(self.amount_entries)} amount entry fields for BIN records.")
         except Exception as e:
             self.print(f"Error creating amount fields: {e}")
@@ -199,33 +199,33 @@ class BinViewFrame(Frame):
         except Exception as e:
             self.print(f"Error updating verification status: {e}")
 
-    def update_matching_amounts(self):
-        try:
-            rows = self.driver.find_elements(By.XPATH, "//tr[contains(@class, 'tabledetails')]")
-            if not rows:
-                self.print("No BIN records found to update matching amounts.")
-                return
-            matches_updated = 0
-            for i, row in enumerate(rows):
-                if i < len(self.amount_entries):
-                    cols = row.find_elements(By.TAG_NAME, "td")
-                    if len(cols) >= 10:
-                        verification_alert = cols[9].text.strip()
-                        if verification_alert == "Amount Matches":
-                            try:
-                                amount_field = cols[7].find_element(By.TAG_NAME, "input")
-                                existing_amount = amount_field.get_attribute("value")
-                                if existing_amount:
-                                    idx, entry_field, _ = self.amount_entries[i]
-                                    entry_field.delete(0, END)
-                                    entry_field.insert(0, existing_amount)
-                                    entry_field.config(bg="#e6ffe6")
-                                    matches_updated += 1
-                            except:
-                                pass
-            self.print(f"✅ Updated {matches_updated} matching amounts in the GUI.")
-        except Exception as e:
-            self.print(f"Error updating matching amounts: {e}")
+    # def update_matching_amounts(self):
+    #     try:
+    #         rows = self.driver.find_elements(By.XPATH, "//tr[contains(@class, 'tabledetails')]")
+    #         if not rows:
+    #             self.print("No BIN records found to update matching amounts.")
+    #             return
+    #         matches_updated = 0
+    #         for i, row in enumerate(rows):
+    #             if i < len(self.amount_entries):
+    #                 cols = row.find_elements(By.TAG_NAME, "td")
+    #                 if len(cols) >= 10:
+    #                         verification_alert = cols[9].text.strip()
+    #                         if verification_alert == "Amount Matches":
+    #                             try:
+    #                                 amount_field = cols[7].find_element(By.TAG_NAME, "input")
+    #                                 existing_amount = amount_field.get_attribute("value")
+    #                                 if existing_amount:
+    #                                     idx, entry_field, _ = self.amount_entries[i]
+    #                                     entry_field.delete(0, END)
+    #                                     entry_field.insert(0, existing_amount)
+    #                                     entry_field.config(bg="#e6ffe6")
+    #                                     matches_updated += 1
+    #                             except:
+    #                                 pass
+    #         self.print(f"✅ Updated {matches_updated} matching amounts in the GUI.")
+    #     except Exception as e:
+    #         self.print(f"Error updating matching amounts: {e}")
 
     def close_browser(self):
         if self.driver:
