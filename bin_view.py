@@ -44,11 +44,15 @@ class BinViewFrame(Frame):
         from_year = self.from_year_var.get()
         to_month = self.to_month_var.get()
         to_year = self.to_year_var.get()
-
+        
         options = webdriver.ChromeOptions()
         options.add_argument("--start-maximized")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        
+        # Get URL from GUI
+        url = self.url_var.get()
+        
         try:
             service = ChromeService(self.get_valid_chromedriver_path())
             self.driver = webdriver.Chrome(service=service, options=options)
@@ -59,7 +63,8 @@ class BinViewFrame(Frame):
             except Exception as e:
                 self.print(f"Fallback also failed: {e}")
                 return
-        self.driver.get("https://onlineservices.tin.egov-nsdl.com/TIN/JSP/etbaf/ViewBIN.jsp")
+        
+        self.driver.get(url)
         wait = WebDriverWait(self.driver, 10)
         wait.until(EC.presence_of_element_located((By.NAME, "tan"))).send_keys(tan)
         Select(wait.until(EC.presence_of_element_located((By.NAME, "formtype")))).select_by_visible_text(form_type)
@@ -521,6 +526,14 @@ class BinViewFrame(Frame):
         to_year_menu = OptionMenu(to_date_frame, self.to_year_var, *[str(y) for y in range(datetime.now().year - 5, datetime.now().year + 6)])
         to_year_menu.pack(side=LEFT)
         update_to_date()
+        
+        # BIN View URL field
+        url_frame = Frame(self.main_frame)
+        url_frame.pack(fill=X, pady=5)
+        Label(url_frame, text="BIN View URL:").pack(side=LEFT)
+        self.url_var = StringVar(value="https://onlineservices.tin.egov.proteantech.in/TIN/JSP/etbaf/ViewBIN.jsp")
+        self.url_entry = Entry(url_frame, textvariable=self.url_var, width=80)
+        self.url_entry.pack(side=LEFT, fill=X, expand=True)
         
         # Browser control buttons (above CAPTCHA)
         browser_button_frame = Frame(self.main_frame)
