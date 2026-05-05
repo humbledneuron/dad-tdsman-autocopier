@@ -29,6 +29,20 @@ def main():
 
     ttk.Button(excel_frame, text="Browse", command=browse_excel).pack(side="left")
 
+    style = ttk.Style()
+    style.theme_use('default')  # or 'clam' for better control
+
+    style.configure("TNotebook.Tab",
+        background="#d9d9d9",
+        foreground="black",
+        padding=[10, 5]
+    )
+
+    style.map("TNotebook.Tab",
+        background=[("selected", "#4CAF50")],  # green when active
+        foreground=[("selected", "white")]
+    )
+
     # Create the notebook and all tabs first
     notebook = ttk.Notebook(root)
     notebook.pack(fill='both', expand=True, padx=10, pady=5)
@@ -40,8 +54,9 @@ def main():
     bin_view_tab.month_amount_map = month_amount_map
     tds_transfer_tab.month_amount_map = month_amount_map
 
-    notebook.add(bin_view_tab, text='BIN View')
     notebook.add(tds_transfer_tab, text='TDS Transfer Tool')
+    notebook.add(bin_view_tab, text='BIN View')
+
 
     # Create Logs tab and log display frame
     logs_frame = ttk.Frame(notebook)
