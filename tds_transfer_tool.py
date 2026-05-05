@@ -234,7 +234,7 @@ def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget, month_amou
             for row_idx in range(1, employee_sheet.nrows):
                 for col_idx in range(employee_sheet.ncols):
                     ws.write(row_idx, col_idx, "")
-                    
+
             column_mappings = {
                 'Employee Serial No (313)': ['Employee Serial No (313)', 'Employee Serial No(313)', 'Employee Serial No'],
                 'Challan Serial Reference (301)': ['Challan Serial Reference (301)', 'Challan Serial Reference(301)', 'Challan Serial Reference'],
@@ -328,7 +328,7 @@ def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget, month_amou
 
                 if csv_df.empty:
                     continue
-                    
+
                 for _, csv_row in csv_df.iterrows():
                     payment_date = get_last_day_of_month(csv_row['Month'])
                     
@@ -402,18 +402,6 @@ class TDSTransferFrame(ttk.Frame):
                     self.csv_files[idx] = filename
 
             ttk.Button(csv_frame, text="Browse", command=browse_csv).pack(side="left")
-
-        # Remove Challan Details CSV selection
-
-                # log_frame = ttk.LabelFrame(self, text="Log")
-        # log_frame.pack(padx=10, pady=10, fill="both", expand=True)
-        
-        # self.log_text = tk.Text(log_frame, wrap="word", height=15)
-        # self.log_text.pack(fill="both", expand=True, padx=5, pady=5)
-        
-        # scrollbar = ttk.Scrollbar(self.log_text, command=self.log_text.yview)
-        # scrollbar.pack(side="right", fill="y")
-        # self.log_text.config(yscrollcommand=scrollbar.set)
 
         def process_files():
             for i in range(3):
