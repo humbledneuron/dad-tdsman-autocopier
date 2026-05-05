@@ -607,6 +607,27 @@ class BinViewFrame(Frame):
         except Exception as e:
             self.print(f"Auto process error: {e}")
 
+    def wait_for_verification(self):
+        try:
+            all_updated = True
+
+            for _, _, label in self.amount_entries:
+                text = label.cget("text")
+
+                if "not verified" in text.lower():
+                    all_updated = False
+                    break
+
+            if all_updated:
+                # All labels updated → now check results
+                self.check_verification_results()
+            else:
+                # Keep waiting
+                self.after(500, self.wait_for_verification)
+
+        except Exception as e:
+            self.print(f"Wait error: {e}")
+            
     def auto_verify_and_extract(self):
         try:
             # Click verify
@@ -614,7 +635,11 @@ class BinViewFrame(Frame):
             self.print("Auto-verifying amounts...")
 
             # Wait for results to update
-            self.after(8000, self.check_verification_results)
+            # self.after(8000, self.check_verification_results)
+            self.wait_for_verification()
+
+            # close the browser after extraction
+            self.close_browser()
 
         except Exception as e:
             self.print(f"Verification error: {e}")
@@ -625,11 +650,11 @@ class BinViewFrame(Frame):
             mismatch_details = []
 
             for i, (_, _, label) in enumerate(self.amount_entries):
-                status = label.cget("text")
+                status = label.cget("text").strip().lower()
 
-                if status != "Amount Matches":
+                if "amount matched" not in status:
                     all_match = False
-                    mismatch_details.append(f"Row {i+1}: {status}")
+                    mismatch_details.append(f"Row {i+1}: {raw_status}")
                     label.config(bg="#ffe6e6")  # light red
 
             if all_match:
