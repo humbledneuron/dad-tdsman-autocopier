@@ -282,6 +282,11 @@ class BinViewFrame(Frame):
             header_row = [challan_sheet.cell_value(0, col) for col in range(challan_sheet.ncols)]
             
             ws_challan = wb.get_sheet(challan_sheet_index)
+
+            # 🧹 CLEAR OLD DATA (keep header row)
+            for row_idx in range(1, challan_sheet.nrows):
+                for col_idx in range(challan_sheet.ncols):
+                    ws_challan.write(row_idx, col_idx, "")
             
             # Same column mappings as TDS Transfer Tool
             column_mappings = {

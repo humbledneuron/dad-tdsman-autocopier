@@ -230,7 +230,11 @@ def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget, month_amou
             header_row = [employee_sheet.cell_value(0, col) for col in range(employee_sheet.ncols)]
             
             ws = wb.get_sheet(employee_sheet_index)
-            
+            # 🧹 CLEAR OLD DATA (keep header row)
+            for row_idx in range(1, employee_sheet.nrows):
+                for col_idx in range(employee_sheet.ncols):
+                    ws.write(row_idx, col_idx, "")
+                    
             column_mappings = {
                 'Employee Serial No (313)': ['Employee Serial No (313)', 'Employee Serial No(313)', 'Employee Serial No'],
                 'Challan Serial Reference (301)': ['Challan Serial Reference (301)', 'Challan Serial Reference(301)', 'Challan Serial Reference'],
