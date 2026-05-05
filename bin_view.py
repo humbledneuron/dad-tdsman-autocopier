@@ -86,6 +86,9 @@ class BinViewFrame(Frame):
             self.print("CAPTCHA submitted. Button clicked.")
             time.sleep(2)
             self.create_amount_fields()
+            # 🚀 Start automation after UI renders
+            self.after(300, self.auto_process_amounts)
+
         except Exception as e:
             self.print(f"Error submitting CAPTCHA: {e}")
 
@@ -137,7 +140,7 @@ class BinViewFrame(Frame):
                     else:
                         amount = ""
 
-                    amount_entry.insert(0, str(amount))
+                    amount_entry.insert(0, str(int(float(amount))) if amount else "")
                     if amount:
                         amount_entry.config(bg="#e6ffe6")  # light green = auto-filled
                         
@@ -224,34 +227,6 @@ class BinViewFrame(Frame):
             self.print(f"Verification complete: {matches_found} matches, {mismatches_found} mismatches.")
         except Exception as e:
             self.print(f"Error updating verification status: {e}")
-
-    # def update_matching_amounts(self):
-    #     try:
-    #         rows = self.driver.find_elements(By.XPATH, "//tr[contains(@class, 'tabledetails')]")
-    #         if not rows:
-    #             self.print("No BIN records found to update matching amounts.")
-    #             return
-    #         matches_updated = 0
-    #         for i, row in enumerate(rows):
-    #             if i < len(self.amount_entries):
-    #                 cols = row.find_elements(By.TAG_NAME, "td")
-    #                 if len(cols) >= 10:
-    #                         verification_alert = cols[9].text.strip()
-    #                         if verification_alert == "Amount Matches":
-    #                             try:
-    #                                 amount_field = cols[7].find_element(By.TAG_NAME, "input")
-    #                                 existing_amount = amount_field.get_attribute("value")
-    #                                 if existing_amount:
-    #                                     idx, entry_field, _ = self.amount_entries[i]
-    #                                     entry_field.delete(0, END)
-    #                                     entry_field.insert(0, existing_amount)
-    #                                     entry_field.config(bg="#e6ffe6")
-    #                                     matches_updated += 1
-    #                             except:
-    #                                 pass
-    #         self.print(f"✅ Updated {matches_updated} matching amounts in the GUI.")
-    #     except Exception as e:
-    #         self.print(f"Error updating matching amounts: {e}")
 
     def close_browser(self):
         if self.driver:
@@ -615,13 +590,56 @@ class BinViewFrame(Frame):
                 self.shared_log_text.see(tk.END)
         self.print = custom_print
 
-        # Add log section
-        # log_frame = LabelFrame(self.main_frame, text="Log")
-        # log_frame.pack(fill=BOTH, expand=True, pady=10)
-        
-        # self.log_text = Text(log_frame, wrap=WORD)
-        # self.log_text.pack(fill=BOTH, expand=True, padx=5, pady=5)
-        
-        # log_scrollbar = Scrollbar(self.log_text, command=self.log_text.yview)
-        # log_scrollbar.pack(side=RIGHT, fill=Y)
-        # self.log_text.config(yscrollcommand=log_scrollbar.set)
+    def auto_process_amounts(self):
+        try:
+            # Step 1: Apply amounts
+            self.apply_amounts_and_check_boxes()
+            self.print("Auto-applied amounts")
+
+            # Step 2: Verify after short delay
+            self.after(500, self.auto_verify_and_extract)
+
+        except Exception as e:
+            self.print(f"Auto process error: {e}")
+
+    def auto_verify_and_extract(self):
+        try:
+            # Click verify
+            self.verify_amounts()
+            self.print("Auto-verifying amounts...")
+
+            # Wait for results to update
+            self.after(8000, self.check_verification_results)
+
+        except Exception as e:
+            self.print(f"Verification error: {e}")
+
+    def check_verification_results(self):
+        try:
+            all_match = True
+            mismatch_details = []
+
+            for i, (_, _, label) in enumerate(self.amount_entries):
+                status = label.cget("text")
+
+                if status != "Amount Matches":
+                    all_match = False
+                    mismatch_details.append(f"Row {i+1}: {status}")
+                    label.config(bg="#ffe6e6")  # light red
+
+            if all_match:
+                self.print("✅ All amounts matched. Extracting automatically...")
+                self.view_bin_data()
+
+            else:
+                msg = "❌ Amount mismatch detected:\n\n" + "\n".join(mismatch_details)
+
+                messagebox.showerror(
+                    "Mismatch Found",
+                    msg + "\n\nPlease recheck the values."
+                )
+
+                self.print("Mismatch detected. Stopping automation.")
+
+        except Exception as e:
+            self.print(f"Result check error: {e}")

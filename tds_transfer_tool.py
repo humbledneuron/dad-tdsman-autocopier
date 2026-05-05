@@ -308,9 +308,11 @@ def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget, month_amou
                         month_name = os.path.basename(csv_file).split('.')[0]
 
                     try:
-                        month_amount_map[month_name] = float(last_value)
+                        clean_value = int(float(last_value))  # removes ALL decimals safely
                     except:
-                        month_amount_map[month_name] = 0
+                        clean_value = 0
+
+                    month_amount_map[month_name] = clean_value
                     
                     log_message(log_widget, f"Mapped → {month_name} : {last_value}")
 
