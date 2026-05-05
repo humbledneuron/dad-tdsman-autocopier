@@ -11,6 +11,7 @@ from tkinter import filedialog, ttk, messagebox
 from datetime import datetime
 
 warnings.filterwarnings('ignore', category=UserWarning)
+month_amount_map = {}
 
 def get_last_day_of_month(month_name, year=2025):
     try:
@@ -181,7 +182,7 @@ def process_challan_details(challan_csv, excel_file, rb, wb, log_widget):
         log_message(log_widget, f"Details: {error_details}")
         return False
 
-def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget):
+def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget, month_amount_map):
     install_required_libraries()
     
     valid_csv_files = [f for f in csv_files if f and os.path.exists(f)]
@@ -289,12 +290,36 @@ def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget):
                 challan_index = str(file_idx + 1)
                 
                 csv_df = pd.read_csv(csv_file)
-                
+
+                # Clean empty rows
+                csv_df = csv_df.dropna(how='all')
+
                 if not csv_df.empty:
+                    # Get last row (summary row)
+                    last_row = csv_df.iloc[-1]
+                    last_value = last_row.iloc[-1]
+
+                    # Extract month from data (IMPORTANT)
+                    # Assuming 'Month' column exists
+                    if 'Month' in csv_df.columns:
+                        month_name = str(csv_df.iloc[0]['Month']).strip()
+                    else:
+                        # fallback: try from filename
+                        month_name = os.path.basename(csv_file).split('.')[0]
+
+                    try:
+                        month_amount_map[month_name] = float(last_value)
+                    except:
+                        month_amount_map[month_name] = 0
+                    
+                    log_message(log_widget, f"Mapped → {month_name} : {last_value}")
+
+                    # Remove summary row for normal processing
                     csv_df = csv_df.iloc[:-1]
                     
                 log_message(log_widget, f"Processing file {file_idx+1}: {os.path.basename(csv_file)} ({len(csv_df)} rows)")
-                
+                log_message(log_widget, f"Stored month mapping: {month_amount_map}")
+
                 if csv_df.empty:
                     continue
                     
@@ -407,7 +432,7 @@ class TDSTransferFrame(ttk.Frame):
                 self.shared_log_text.see(tk.END)
             
             # Only pass employee CSVs, not challan_csv
-            success = transfer_to_excel(self.csv_files, None, excel_file, self.shared_log_text)
+            success = transfer_to_excel(self.csv_files, None, excel_file, self.shared_log_text, self.month_amount_map)
             
             if success:
                 if self.shared_log_text:

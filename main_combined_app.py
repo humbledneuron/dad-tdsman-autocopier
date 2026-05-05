@@ -4,6 +4,8 @@ from bin_view import BinViewFrame
 from tds_transfer_tool import TDSTransferFrame
 
 def main():
+    month_amount_map = {}
+
     root = tk.Tk()
     root.title('Combined BIN View & TDS Transfer Tool')
     root.geometry('900x900')
@@ -31,8 +33,12 @@ def main():
     notebook = ttk.Notebook(root)
     notebook.pack(fill='both', expand=True, padx=10, pady=5)
 
-    bin_view_tab = BinViewFrame(notebook, excel_entry, None)  # Pass None for now
-    tds_transfer_tab = TDSTransferFrame(notebook, excel_entry, None)  # Pass None for now
+    bin_view_tab = BinViewFrame(notebook, excel_entry, None)
+    tds_transfer_tab = TDSTransferFrame(notebook, excel_entry, None)
+
+    # Inject shared data storage
+    bin_view_tab.month_amount_map = month_amount_map
+    tds_transfer_tab.month_amount_map = month_amount_map
 
     notebook.add(bin_view_tab, text='BIN View')
     notebook.add(tds_transfer_tab, text='TDS Transfer Tool')

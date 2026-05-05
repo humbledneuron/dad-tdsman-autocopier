@@ -125,7 +125,24 @@ class BinViewFrame(Frame):
                     verification_label.grid(row=0, column=2)
                     amount_entry = Entry(entry_frame, width=15)
                     amount_entry.grid(row=0, column=3)
-                    amount_entry.insert(0, "")
+                    # 🎯 Auto-fill logic
+                    try:
+                        date_obj = datetime.strptime(date, "%d/%m/%Y")
+                        bin_month = date_obj.strftime("%B")
+                    except:
+                        bin_month = None
+
+                    if hasattr(self, 'month_amount_map') and bin_month:
+                        amount = self.month_amount_map.get(bin_month, "")
+                    else:
+                        amount = ""
+
+                    amount_entry.insert(0, str(amount))
+                    if amount:
+                        amount_entry.config(bg="#e6ffe6")  # light green = auto-filled
+                        
+                    self.print(f"Auto-filled amounts using month mapping: {self.month_amount_map}")
+
                     self.amount_entries.append((i, amount_entry, verification_label))
             button_frame = Frame(self.amounts_frame)
             button_frame.pack(fill=X, pady=10)
@@ -416,8 +433,23 @@ class BinViewFrame(Frame):
                     }
                     if i < len(self.amount_entries):
                         _, entry_field, _ = self.amount_entries[i]
-                        amount = entry_field.get()
-                        record["Amount"] = amount if amount else ""
+                        # Convert date → month
+                        date_str = record["Date"]
+
+                        try:
+                            date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+                            bin_month = date_obj.strftime("%B")  # e.g., "January"
+                        except:
+                            bin_month = None
+
+                        # Fetch amount from map
+                        if hasattr(self, 'month_amount_map') and bin_month:
+                            amount = self.month_amount_map.get(bin_month, "")
+                        else:
+                            amount = ""
+
+                        record["Amount"] = amount
+                        # self.print(f"Using amount {amount} for month {bin_month}")
                     else:
                         record["Amount"] = ""
                     data_list.append(record)
@@ -582,7 +614,7 @@ class BinViewFrame(Frame):
                 self.shared_log_text.insert(tk.END, f"[BIN View] [{timestamp}] {message}\n")
                 self.shared_log_text.see(tk.END)
         self.print = custom_print
-        
+
         # Add log section
         # log_frame = LabelFrame(self.main_frame, text="Log")
         # log_frame.pack(fill=BOTH, expand=True, pady=10)
