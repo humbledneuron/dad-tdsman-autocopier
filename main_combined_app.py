@@ -30,7 +30,7 @@ def main():
     ttk.Button(excel_frame, text="Browse", command=browse_excel).pack(side="left")
 
     style = ttk.Style()
-    style.theme_use('default')  # or 'clam' for better control
+    style.theme_use('clam')  # default or 'clam' for better control
 
     style.configure("TNotebook.Tab",
         background="#d9d9d9",
