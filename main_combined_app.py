@@ -98,7 +98,8 @@ def main():
                     if normalized_client == normalized_detected:
                         matched_client = client
                         break
-
+                
+                #comment this if we don't want CLIENT DETECTED DIALOG to popup 
                 if matched_client:
 
                     bin_frame.client_var.set(matched_client)
