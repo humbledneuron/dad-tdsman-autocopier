@@ -339,7 +339,7 @@ def transfer_to_excel(csv_files, challan_csv, excel_file, log_widget, month_amou
             style_date.font = font
             style_date.num_format_str = 'DD/MM/YYYY'
             
-            start_row = employee_sheet.nrows
+            start_row = 1
             current_row = start_row
             total_processed = 0
             
