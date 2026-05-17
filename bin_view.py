@@ -662,7 +662,7 @@ class BinViewFrame(Frame):
 
                 if "amount matched" not in status:
                     all_match = False
-                    mismatch_details.append(f"Row {i+1}: {raw_status}")
+                    mismatch_details.append(f"Row {i+1}: {status}")
                     label.config(bg="#ffe6e6")  # light red
 
             if all_match:
