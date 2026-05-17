@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, Text, Scrollbar
+from tkinter import ttk, filedialog, Text, Scrollbar, messagebox
 from bin_view import BinViewFrame
 from tds_transfer_tool import TDSTransferFrame
 
@@ -21,11 +21,28 @@ def main():
     excel_entry = ttk.Entry(excel_frame, width=70)
     excel_entry.pack(side="left", padx=5, fill="x", expand=True)
 
+    # Storage for frame references to enable auto-population
+    frames_dict = {}
+
     def browse_excel():
         filename = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xls")])
         if filename:
             excel_entry.delete(0, tk.END)
             excel_entry.insert(0, filename)
+            
+            # Auto-populate CSV files in TDS Transfer tab
+            if 'tds_transfer' in frames_dict:
+                tds_frame = frames_dict['tds_transfer']
+                if tds_frame.auto_populate_csv_files(filename):
+                    # Ask user if they want to auto-process
+                    response = messagebox.askyesno(
+                        "Auto-Process", 
+                        "CSV files found and auto-populated. Would you like to automatically process them now?"
+                    )
+                    if response:
+                        # Trigger the process_files function
+                        # We need to access the process_files function, so let's call it through the button
+                        tds_frame.process_files()
 
     ttk.Button(excel_frame, text="Browse", command=browse_excel).pack(side="left")
 
@@ -49,6 +66,10 @@ def main():
 
     bin_view_tab = BinViewFrame(notebook, excel_entry, None)
     tds_transfer_tab = TDSTransferFrame(notebook, excel_entry, None)
+
+    # Store frame references for later access
+    frames_dict['bin_view'] = bin_view_tab
+    frames_dict['tds_transfer'] = tds_transfer_tab
 
     # Inject shared data storage
     bin_view_tab.month_amount_map = month_amount_map

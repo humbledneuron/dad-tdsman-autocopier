@@ -376,6 +376,7 @@ class TDSTransferFrame(ttk.Frame):
         super().__init__(parent)
         self.shared_excel_entry = shared_excel_entry
         self.shared_log_text = shared_log_text
+        self.month_amount_map = {}
         self._build_ui()
 
     def _build_ui(self):
@@ -403,49 +404,92 @@ class TDSTransferFrame(ttk.Frame):
 
             ttk.Button(csv_frame, text="Browse", command=browse_csv).pack(side="left")
 
-        def process_files():
-            for i in range(3):
-                self.csv_files[i] = self.csv_entries[i].get()
-
-            excel_file = self.shared_excel_entry.get()
-
-            valid_csv_files = [f for f in self.csv_files if f and os.path.exists(f)]
-
-            if not valid_csv_files:
-                messagebox.showerror("Error", "Please select at least one valid Employee Details CSV file")
-                return
-
-            if not excel_file or not os.path.exists(excel_file):
-                messagebox.showerror("Error", "Please select a valid Excel file")
-                return
-
-            # Log to shared log if available
-            if self.shared_log_text:
-                timestamp = datetime.now().strftime("%H:%M:%S")
-                self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Starting data transfer process...\n")
-                self.shared_log_text.see(tk.END)
-            
-            # Only pass employee CSVs, not challan_csv
-            success = transfer_to_excel(self.csv_files, None, excel_file, self.shared_log_text, self.month_amount_map)
-            
-            if success:
-                if self.shared_log_text:
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Process completed successfully!\n")
-                    self.shared_log_text.see(tk.END)
-                messagebox.showinfo("Success", "Data transfer complete")
-            else:
-                if self.shared_log_text:
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Process failed!\n")
-                    self.shared_log_text.see(tk.END)
-                messagebox.showerror("Error", "Transfer failed. See log for details.")
-
         button_frame = ttk.Frame(self)
         button_frame.pack(pady=10)
 
-        process_button = ttk.Button(button_frame, text="Process Files", command=process_files)
+        process_button = ttk.Button(button_frame, text="Process Files", command=self.process_files)
         process_button.pack(padx=5, pady=5)
+
+    def process_files(self):
+        """Process the CSV files into the Excel file."""
+        for i in range(3):
+            self.csv_files[i] = self.csv_entries[i].get()
+
+        excel_file = self.shared_excel_entry.get()
+
+        valid_csv_files = [f for f in self.csv_files if f and os.path.exists(f)]
+
+        if not valid_csv_files:
+            messagebox.showerror("Error", "Please select at least one valid Employee Details CSV file")
+            return
+
+        if not excel_file or not os.path.exists(excel_file):
+            messagebox.showerror("Error", "Please select a valid Excel file")
+            return
+
+        # Log to shared log if available
+        if self.shared_log_text:
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Starting data transfer process...\n")
+            self.shared_log_text.see(tk.END)
+        
+        # Only pass employee CSVs, not challan_csv
+        success = transfer_to_excel(self.csv_files, None, excel_file, self.shared_log_text, self.month_amount_map)
+        
+        if success:
+            if self.shared_log_text:
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Process completed successfully!\n")
+                self.shared_log_text.see(tk.END)
+            messagebox.showinfo("Success", "Data transfer complete")
+        else:
+            if self.shared_log_text:
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Process failed!\n")
+                self.shared_log_text.see(tk.END)
+            messagebox.showerror("Error", "Transfer failed. See log for details.")
+
+    def auto_populate_csv_files(self, excel_file):
+        """Automatically find and populate CSV files from the same directory as the Excel file."""
+        if not excel_file or not os.path.exists(excel_file):
+            return False
+        
+        excel_dir = os.path.dirname(excel_file)
+        
+        # Find all CSV files in the same directory
+        csv_files = []
+        try:
+            for file in os.listdir(excel_dir):
+                if file.endswith('.csv'):
+                    full_path = os.path.join(excel_dir, file)
+                    csv_files.append(full_path)
+        except Exception as e:
+            if self.shared_log_text:
+                log_message(self.shared_log_text, f"Error scanning directory for CSV files: {str(e)}")
+            return False
+        
+        # Sort for consistent ordering
+        csv_files.sort()
+        
+        if not csv_files:
+            if self.shared_log_text:
+                log_message(self.shared_log_text, f"No CSV files found in {excel_dir}")
+            return False
+        
+        # Populate the CSV entries (up to 3 files)
+        for i in range(min(3, len(csv_files))):
+            self.csv_entries[i].delete(0, tk.END)
+            self.csv_entries[i].insert(0, csv_files[i])
+            self.csv_files[i] = csv_files[i]
+            if self.shared_log_text:
+                log_message(self.shared_log_text, f"Auto-selected CSV File {i+1}: {os.path.basename(csv_files[i])}")
+        
+        # Clear remaining entries if fewer than 3 CSV files
+        for i in range(len(csv_files), 3):
+            self.csv_entries[i].delete(0, tk.END)
+            self.csv_files[i] = None
+        
+        return True
 
 if __name__ == "__main__":
     root = tk.Tk()
