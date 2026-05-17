@@ -23,11 +23,42 @@ warnings.filterwarnings('ignore', category=UserWarning)
 class BinViewFrame(Frame):
     def __init__(self, parent, shared_excel_entry, shared_log_text=None):
         super().__init__(parent)
+
+        # Hardcoded client registry
+        self.client_data = {
+            "GBA School": {
+                "tan": "ASDA12JN2",
+                "ain": "123424"
+            },
+
+            "ZPHS Mallaram": {
+                "tan": "HYDH01739D",
+                "ain": "1019491"
+            },
+
+            "Client X1": {
+                "tan": "TAN1",
+                "ain": "AIN1"
+            }
+        }
+
         self.driver = None
         self.amount_entries = []
         self.shared_excel_entry = shared_excel_entry
         self.shared_log_text = shared_log_text
         self._build_ui()
+
+    def on_client_selected(self, event=None):
+        client = self.client_var.get()
+
+        if client in self.client_data:
+            self.tan_var.set(
+                self.client_data[client]["tan"]
+            )
+
+            self.ain_var.set(
+                self.client_data[client]["ain"]
+            )
 
     def get_valid_chromedriver_path(self):
         path = ChromeDriverManager().install()
@@ -473,42 +504,126 @@ class BinViewFrame(Frame):
         self.canvas.bind('<Configure>', configure_canvas)
         self.main_frame.bind('<Configure>', lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.main_frame.configure(padx=20, pady=20)
-        tan_frame = Frame(self.main_frame)
-        tan_frame.pack(fill=X, pady=5)
-        Label(tan_frame, text="TAN:").pack(side=LEFT)
-        self.tan_entry = Entry(tan_frame, width=10)
-        self.tan_entry.insert(0, "HYDH01739D")
-        self.tan_entry.pack(side=LEFT, fill=X, expand=True)
-        def validate_tan_format(*args):
-            value = self.tan_entry.get().upper()
-            new_value = ""
-            for i, char in enumerate(value):
-                if i < 4:
-                    if char.isalpha():
-                        new_value += char
-                elif i < 9:
-                    if char.isdigit():
-                        new_value += char
-                elif i == 9:
-                    if char.isalpha():
-                        new_value += char
-            new_value = new_value[:10]
-            self.tan_entry.delete(0, END)
-            self.tan_entry.insert(0, new_value)
-        self.tan_entry.bind('<KeyRelease>', validate_tan_format)
-        self.tan_entry.bind('<FocusOut>', validate_tan_format)
+        # tan_frame = Frame(self.main_frame)
+        # tan_frame.pack(fill=X, pady=5)
+        # Label(tan_frame, text="TAN:").pack(side=LEFT)
+        # self.tan_entry = Entry(tan_frame, width=10)
+        # self.tan_entry.insert(0, "HYDH01739D")
+        # self.tan_entry.pack(side=LEFT, fill=X, expand=True)
+        # def validate_tan_format(*args):
+        #     value = self.tan_entry.get().upper()
+        #     new_value = ""
+        #     for i, char in enumerate(value):
+        #         if i < 4:
+        #             if char.isalpha():
+        #                 new_value += char
+        #         elif i < 9:
+        #             if char.isdigit():
+        #                 new_value += char
+        #         elif i == 9:
+        #             if char.isalpha():
+        #                 new_value += char
+        #     new_value = new_value[:10]
+        #     self.tan_entry.delete(0, END)
+        #     self.tan_entry.insert(0, new_value)
+        # self.tan_entry.bind('<KeyRelease>', validate_tan_format)
+        # self.tan_entry.bind('<FocusOut>', validate_tan_format)
+
+
+        # ==========================================
+        # CLIENT / TAN / AIN ROW
+        # ==========================================
+
+        details_frame = Frame(self.main_frame)
+        details_frame.pack(fill=X, pady=5)
+
+
+        # --------------------------
+        # CLIENT
+        # --------------------------
+
+        Label(details_frame, text="Client:").pack(side=LEFT, padx=(0, 5))
+
+        self.client_var = StringVar()
+
+        self.client_dropdown = ttk.Combobox(
+            details_frame,
+            textvariable=self.client_var,
+            values=list(self.client_data.keys()),
+            state="readonly",
+            width=30
+        )
+
+        self.client_dropdown.pack(side=LEFT, padx=(0, 15))
+
+
+        # --------------------------
+        # TAN
+        # --------------------------
+
+        Label(details_frame, text="TAN:").pack(side=LEFT, padx=(0, 5))
+
+        self.tan_var = StringVar()
+
+        self.tan_entry = Entry(
+            details_frame,
+            textvariable=self.tan_var,
+            state="readonly",
+            width=20,
+            readonlybackground="white"
+        )
+
+        self.tan_entry.pack(side=LEFT, padx=(0, 15))
+
+
+        # --------------------------
+        # AIN
+        # --------------------------
+
+        Label(details_frame, text="AIN:").pack(side=LEFT, padx=(0, 5))
+
+        self.ain_var = StringVar()
+
+        self.ain_entry = Entry(
+            details_frame,
+            textvariable=self.ain_var,
+            state="readonly",
+            width=15,
+            readonlybackground="white"
+        )
+
+        self.ain_entry.pack(side=LEFT)
+
+
+        # ==========================================
+        # CLIENT SELECTION EVENT
+        # ==========================================
+
+        self.client_dropdown.bind(
+            "<<ComboboxSelected>>",
+            self.on_client_selected
+        )
+
+        # Default selection
+        default_client = list(self.client_data.keys())[0]
+
+        self.client_var.set(default_client)
+
+        self.on_client_selected()
+######################################
+
         form_frame = Frame(self.main_frame)
         form_frame.pack(fill=X, pady=5)
         Label(form_frame, text="Form Type:").pack(side=LEFT)
         self.form_type_var = StringVar(value="TDS - Salary - Form 24Q")
         form_type_menu = OptionMenu(form_frame, self.form_type_var, "TDS - Salary - Form 24Q", "TDS - Non Salary - Form 26Q", "TDS - Non Salary - Non Resident - Form 27Q", "TCS - Form 27EQ", "All Form types")
         form_type_menu.pack(side=LEFT, fill=X, expand=True)
-        ain_frame = Frame(self.main_frame)
-        ain_frame.pack(fill=X, pady=5)
-        Label(ain_frame, text="AIN:").pack(side=LEFT)
-        self.ain_entry = Entry(ain_frame)
-        self.ain_entry.insert(0, "1019491")
-        self.ain_entry.pack(side=LEFT, fill=X, expand=True)
+        # ain_frame = Frame(self.main_frame)
+        # ain_frame.pack(fill=X, pady=5)
+        # Label(ain_frame, text="AIN:").pack(side=LEFT)
+        # self.ain_entry = Entry(ain_frame)
+        # self.ain_entry.insert(0, "1019491")
+        # self.ain_entry.pack(side=LEFT, fill=X, expand=True)
         from_date_frame = Frame(self.main_frame)
         from_date_frame.pack(fill=X, pady=5)
         Label(from_date_frame, text="From Month & Year:").pack(side=LEFT)
