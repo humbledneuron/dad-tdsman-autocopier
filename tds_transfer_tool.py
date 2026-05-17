@@ -499,7 +499,11 @@ class TDSTransferFrame(ttk.Frame):
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 self.shared_log_text.insert(tk.END, f"[TDS Transfer] [{timestamp}] Process completed successfully!\n")
                 self.shared_log_text.see(tk.END)
-            messagebox.showinfo("Success", "Data transfer complete")
+                # Automatically switch to BIN View tab
+            if hasattr(self, 'notebook'):
+                # self.notebook.select(1)
+                self.notebook.select(self.notebook.tabs()[1])
+            # messagebox.showinfo("Success", "Data transfer complete")
         else:
             if self.shared_log_text:
                 timestamp = datetime.now().strftime("%H:%M:%S")

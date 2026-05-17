@@ -165,6 +165,10 @@ def main():
     bin_view_tab = BinViewFrame(notebook, excel_entry, None)
     tds_transfer_tab = TDSTransferFrame(notebook, excel_entry, None)
 
+    # Give notebook access to frames
+    bin_view_tab.notebook = notebook
+    tds_transfer_tab.notebook = notebook
+
     # Store frame references for later access
     frames_dict['bin_view'] = bin_view_tab
     frames_dict['tds_transfer'] = tds_transfer_tab
