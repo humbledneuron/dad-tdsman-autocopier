@@ -234,6 +234,14 @@ class BinViewFrame(Frame):
                 self.driver.quit()
                 self.driver = None
                 self.print("Browser closed successfully.")
+                
+                # Clear CAPTCHA entry
+                self.captcha_entry.delete(0, END)
+                
+                # Clear amount fields and UI
+                self.clear_amount_fields()
+                self.print("CAPTCHA and amount fields cleared.")
+                
             except Exception as e:
                 self.print(f"Error closing browser: {e}")
         else:
