@@ -8,6 +8,7 @@ __pycache__/
 
 mallaram*
 win11/
+clients.json
 
 # Distribution / packaging
 .Python
