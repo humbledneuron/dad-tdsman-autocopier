@@ -1,5 +1,23 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, Text, Scrollbar, messagebox
+import sys
+import os
+
+# Hide console window on Windows
+if sys.platform == 'win32':
+    import ctypes
+    try:
+        # Get the window handle of the console
+        kernel32 = ctypes.windll.kernel32
+        kernel32.SetConsoleCP(65001)
+        
+        # Hide the console window
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        if hwnd != 0:
+            ctypes.windll.user32.ShowWindow(hwnd, 0)
+    except:
+        pass
+
 from bin_view import BinViewFrame
 from tds_transfer_tool import TDSTransferFrame
 
