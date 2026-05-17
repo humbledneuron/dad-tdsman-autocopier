@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, Text, Scrollbar, messagebox
 import sys
 import os
+import re
 
 # Hide console window on Windows
 if sys.platform == 'win32':
@@ -17,6 +18,35 @@ if sys.platform == 'win32':
             ctypes.windll.user32.ShowWindow(hwnd, 0)
     except:
         pass
+
+
+def extract_client_name_from_excel(filename):
+
+    base = os.path.basename(filename)
+
+    # Remove extension
+    base = os.path.splitext(base)[0]
+
+    # Split words
+    parts = base.split()
+
+    # Find token like 24Q2425
+    year_index = None
+
+    for i, part in enumerate(parts):
+
+        if re.match(r"\d{2}Q\d{4}", part):
+            year_index = i
+            break
+
+    if year_index is None:
+        return None
+
+    # Everything AFTER year token
+    client_name = " ".join(parts[year_index + 1:])
+
+    return client_name.strip().upper()
+
 
 from bin_view import BinViewFrame
 from tds_transfer_tool import TDSTransferFrame
@@ -47,7 +77,47 @@ def main():
         if filename:
             excel_entry.delete(0, tk.END)
             excel_entry.insert(0, filename)
-            
+
+            # =====================================
+            # AUTO CLIENT DETECTION
+            # =====================================
+
+            client_name = extract_client_name_from_excel(filename)
+
+            if client_name and 'bin_view' in frames_dict:
+
+                bin_frame = frames_dict['bin_view']
+
+                matched_client = None
+
+                for client in bin_frame.client_data.keys():
+
+                    normalized_client = " ".join(client.lower().split())
+                    normalized_detected = " ".join(client_name.lower().split())
+
+                    if normalized_client == normalized_detected:
+                        matched_client = client
+                        break
+
+                if matched_client:
+
+                    bin_frame.client_var.set(matched_client)
+                    bin_frame.on_client_selected()
+
+                    messagebox.showinfo(
+                        "Client Auto-Detected",
+                        f"Detected client:\n\n{matched_client}"
+                    )
+
+                else:
+
+                    messagebox.showwarning(
+                        "Client Not Found",
+                        f"Detected client name:\n\n"
+                        f"{client_name}\n\n"
+                        f"but no matching client exists in clients.json"
+                    )
+
             # Auto-populate CSV files in TDS Transfer tab
             if 'tds_transfer' in frames_dict:
                 tds_frame = frames_dict['tds_transfer']
