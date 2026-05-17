@@ -61,6 +61,15 @@ def main():
                         # Trigger the process_files function
                         # We need to access the process_files function, so let's call it through the button
                         tds_frame.process_files()
+                        # Share month range with BIN View
+                        if 'bin_view' in frames_dict:
+                            bin_frame = frames_dict['bin_view']
+
+                            bin_frame.start_month = tds_frame.start_month
+                            bin_frame.end_month = tds_frame.end_month
+
+                            # Auto-select in BIN Viewer
+                            bin_frame.auto_select_months()
 
     ttk.Button(excel_frame, text="Browse", command=browse_excel).pack(side="left")
 

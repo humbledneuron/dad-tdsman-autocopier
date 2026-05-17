@@ -17,6 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
 import tkinter as tk
+import json
 
 warnings.filterwarnings('ignore', category=UserWarning)
 
@@ -24,29 +25,35 @@ class BinViewFrame(Frame):
     def __init__(self, parent, shared_excel_entry, shared_log_text=None):
         super().__init__(parent)
 
-        # Hardcoded client registry
-        self.client_data = {
-            "GBA School": {
-                "tan": "ASDA12JN2",
-                "ain": "123424"
-            },
-
-            "ZPHS Mallaram": {
-                "tan": "HYDH01739D",
-                "ain": "1019491"
-            },
-
-            "Client X1": {
-                "tan": "TAN1",
-                "ain": "AIN1"
-            }
-        }
-
+        # Load client data from JSON
+        with open("clients.json", "r") as f:
+            self.client_data = json.load(f)
+        
         self.driver = None
         self.amount_entries = []
         self.shared_excel_entry = shared_excel_entry
         self.shared_log_text = shared_log_text
         self._build_ui()
+        self.start_month = None
+        self.end_month = None
+
+    def auto_select_months(self):
+
+        try:
+
+            if self.start_month:
+                self.from_month_var.set(self.start_month)
+
+            if self.end_month:
+                self.to_month_var.set(self.end_month)
+
+            self.print(
+                f"Auto-selected months: "
+                f"{self.start_month} → {self.end_month}"
+            )
+
+        except Exception as e:
+            self.print(f"Month auto-selection error: {e}")
 
     def on_client_selected(self, event=None):
         client = self.client_var.get()
@@ -761,8 +768,6 @@ class BinViewFrame(Frame):
             # self.after(8000, self.check_verification_results)
             self.wait_for_verification()
 
-            # close the browser after extraction
-            self.close_browser()
 
         except Exception as e:
             self.print(f"Verification error: {e}")
@@ -783,6 +788,9 @@ class BinViewFrame(Frame):
             if all_match:
                 self.print("✅ All amounts matched. Extracting automatically...")
                 self.view_bin_data()
+                
+                # close the browser after extraction
+                self.close_browser()
 
             else:
                 msg = "❌ Amount mismatch detected:\n\n" + "\n".join(mismatch_details)

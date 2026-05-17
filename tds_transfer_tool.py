@@ -13,7 +13,63 @@ from datetime import datetime
 warnings.filterwarnings('ignore', category=UserWarning)
 month_amount_map = {}
 
-def get_last_day_of_month(month_name, year=2025):
+
+MONTH_ORDER = {
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12
+}
+
+
+def extract_month_year(filename):
+    """
+    Extract month/year from filenames like:
+    April_2025_report.csv
+    """
+
+    base = os.path.basename(filename).lower()
+
+    parts = base.replace(".csv", "").split("_")
+
+    month = None
+    year = None
+
+    for part in parts:
+
+        if part in MONTH_ORDER:
+            month = MONTH_ORDER[part]
+
+        if part.isdigit() and len(part) == 4:
+            year = int(part)
+
+    if month and year:
+        return (year, month)
+
+    return (9999, 99)
+
+def extract_month_name(filename):
+
+    base = os.path.basename(filename).lower()
+
+    parts = base.replace(".csv", "").split("_")
+
+    for part in parts:
+
+        if part in MONTH_ORDER:
+            return part.capitalize()
+
+    return None
+
+def get_last_day_of_month(month_name, year=2026):
     try:
         month_number = {
             'January': 1, 'February': 2, 'March': 3, 'April': 4,
@@ -24,7 +80,7 @@ def get_last_day_of_month(month_name, year=2025):
         last_day = calendar.monthrange(year, month_number)[1]
         return datetime(year, month_number, last_day)
     except KeyError:
-        return datetime(2025, 3, 31)
+        return datetime(2026, 3, 31)
 
 def parse_date(date_str):
     try:
@@ -378,6 +434,8 @@ class TDSTransferFrame(ttk.Frame):
         self.shared_log_text = shared_log_text
         self.month_amount_map = {}
         self._build_ui()
+        self.start_month = None
+        self.end_month = None
 
     def _build_ui(self):
         file_frame = ttk.LabelFrame(self, text="File Selection")
@@ -469,8 +527,9 @@ class TDSTransferFrame(ttk.Frame):
             return False
         
         # Sort for consistent ordering
-        csv_files.sort()
-        
+        # csv_files.sort()
+        csv_files.sort(key=extract_month_year)
+
         if not csv_files:
             if self.shared_log_text:
                 log_message(self.shared_log_text, f"No CSV files found in {excel_dir}")
@@ -484,6 +543,23 @@ class TDSTransferFrame(ttk.Frame):
             if self.shared_log_text:
                 log_message(self.shared_log_text, f"Auto-selected CSV File {i+1}: {os.path.basename(csv_files[i])}")
         
+        # Store start/end month for BIN Viewer usage
+        if csv_files:
+
+            # self.start_month = extract_month_name(csv_files[0])
+            # self.end_month = extract_month_name(csv_files[-1])
+
+            selected_files = csv_files[:3]
+
+            self.start_month = extract_month_name(selected_files[0])
+            self.end_month = extract_month_name(selected_files[-1])
+
+            if self.shared_log_text:
+                log_message(
+                    self.shared_log_text,
+                    f"Detected month range: {self.start_month} → {self.end_month}"
+                )
+
         # Clear remaining entries if fewer than 3 CSV files
         for i in range(len(csv_files), 3):
             self.csv_entries[i].delete(0, tk.END)
