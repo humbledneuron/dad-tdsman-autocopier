@@ -11,6 +11,8 @@ win11/
 *.json
 CLIENT DETAILS.xlsx
 *.png
+*.zip
+*.backup
 
 # Distribution / packaging
 .Python
