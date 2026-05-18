@@ -761,3 +761,223 @@ if __name__ == "__main__":
     input("Press ENTER to close...")
 
     app.close_browser()
+
+
+import tkinter as tk
+from tkinter import ttk
+import glob
+import re
+
+
+class EfilingFrame(ttk.Frame):
+
+    def __init__(
+        self,
+        parent,
+        shared_excel_entry,
+        shared_log_text=None
+    ):
+
+        super().__init__(parent)
+        self.automation = IncomeTaxLoginAutomation()
+
+        self.shared_excel_entry = shared_excel_entry
+        self.shared_log_text = shared_log_text
+
+        self._build_ui()
+
+    def start_efiling_process(self):
+
+        try:
+
+            username = self.efiling_username_var.get()
+            password = self.efiling_password_var.get()
+            zip_path = self.zip_var.get()
+
+            if not username:
+                print("No eFiling username found.")
+                return
+
+            if not password:
+                print("No eFiling password found.")
+                return
+
+            if not zip_path or not os.path.exists(zip_path):
+                print("ZIP file not found.")
+                return
+
+            print("Starting eFiling automation...")
+
+            self.close_browser()
+            self.automation.start_browser()
+
+            self.automation.enter_user_id(username)
+
+            password_success = self.automation.enter_password(password)
+
+            if not password_success:
+                print("Password step failed.")
+                return
+
+            self.automation.navigate_to_upload_section()
+
+            self.automation.attach_tds_zip(zip_path)
+
+            print("✅ eFiling automation completed.")
+
+        except Exception as e:
+
+            print(f"eFiling process error: {e}")
+
+    def auto_detect_zip(self):
+
+        try:
+
+            excel_path = self.shared_excel_entry.get()
+
+            if not excel_path:
+                return
+
+            folder = os.path.dirname(excel_path)
+
+            zip_files = glob.glob(
+                os.path.join(folder, "*.zip")
+            )
+
+            matched_zip = None
+
+            for file in zip_files:
+
+                filename = os.path.basename(file).upper()
+
+                if re.search(r"[A-Z]{3}\d{2}Q[1-4]", filename):
+
+                    matched_zip = file
+                    break
+
+            if matched_zip:
+
+                self.zip_var.set(matched_zip)
+
+        except Exception as e:
+
+            print(f"ZIP detection error: {e}")
+
+    def _build_ui(self):
+
+        main_frame = ttk.Frame(self)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # ==========================================
+        # USERNAME
+        # ==========================================
+
+        ttk.Label(
+            main_frame,
+            text="eFiling Username:"
+        ).grid(row=0, column=0, sticky="w", pady=5)
+
+        self.efiling_username_var = tk.StringVar()
+
+        username_entry = ttk.Entry(
+            main_frame,
+            textvariable=self.efiling_username_var,
+            state="readonly",
+            width=40
+        )
+
+        username_entry.grid(row=0, column=1, pady=5, sticky="ew")
+
+        # ==========================================
+        # PASSWORD
+        # ==========================================
+
+        ttk.Label(
+            main_frame,
+            text="eFiling Password:"
+        ).grid(row=1, column=0, sticky="w", pady=5)
+
+        self.efiling_password_var = tk.StringVar()
+
+        password_entry = ttk.Entry(
+            main_frame,
+            textvariable=self.efiling_password_var,
+            state="readonly",
+            width=40
+        )
+
+        password_entry.grid(row=1, column=1, pady=5, sticky="ew")
+
+        # ==========================================
+        # ZIP FILE
+        # ==========================================
+
+        ttk.Label(
+            main_frame,
+            text="ZIP File:"
+        ).grid(row=2, column=0, sticky="w", pady=5)
+
+        self.zip_var = tk.StringVar()
+
+        zip_entry = ttk.Entry(
+            main_frame,
+            textvariable=self.zip_var,
+            state="readonly",
+            width=60
+        )
+
+        zip_entry.grid(row=2, column=1, pady=5, sticky="ew")
+
+        main_frame.columnconfigure(1, weight=1)
+
+        # ==========================================
+        # BUTTON FRAME
+        # ==========================================
+
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(
+            row=3,
+            column=1,
+            sticky="e",
+            pady=20
+        )
+
+        # START BUTTON
+        start_button = ttk.Button(
+            button_frame,
+            text="Start eFiling",
+            command=self.start_efiling_process
+        )
+
+        start_button.pack(side="left", padx=5)
+
+
+        # CLOSE BUTTON
+        close_button = ttk.Button(
+            button_frame,
+            text="Close Browser",
+            command=self.close_browser
+        )
+
+        close_button.pack(side="left", padx=5)
+
+
+    def close_browser(self):
+
+        try:
+
+            if self.automation:
+
+                self.automation.close_browser()
+
+                print("Browser closed successfully.")
+
+        except Exception as e:
+
+            print(f"Close browser error: {e}")
+
+
+
+
+
+

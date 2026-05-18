@@ -56,16 +56,27 @@ class BinViewFrame(Frame):
             self.print(f"Month auto-selection error: {e}")
 
     def on_client_selected(self, event=None):
+
         client = self.client_var.get()
 
         if client in self.client_data:
-            self.tan_var.set(
-                self.client_data[client]["tan"]
-            )
 
-            self.ain_var.set(
-                self.client_data[client]["ain"]
-            )
+            data = self.client_data[client]
+
+            # BIN VIEW
+            self.tan_var.set(data.get("tan", ""))
+            self.ain_var.set(data.get("ain", ""))
+
+            # E-FILING
+            if hasattr(self, "efiling_username_var"):
+                self.efiling_username_var.set(
+                    data.get("itEfilingUname", "")
+                )
+
+            if hasattr(self, "efiling_password_var"):
+                self.efiling_password_var.set(
+                    data.get("itEfilingPword", "")
+                )
 
     def get_valid_chromedriver_path(self):
         path = ChromeDriverManager().install()

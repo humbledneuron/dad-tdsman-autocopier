@@ -50,6 +50,7 @@ def extract_client_name_from_excel(filename):
 
 from bin_view import BinViewFrame
 from tds_transfer_tool import TDSTransferFrame
+from efiling import EfilingFrame
 
 def main():
     month_amount_map = {}
@@ -104,6 +105,25 @@ def main():
 
                     bin_frame.client_var.set(matched_client)
                     bin_frame.on_client_selected()
+
+                    if 'efiling' in frames_dict:
+
+                        efiling_frame = frames_dict['efiling']
+
+                        client_data = bin_frame.client_data.get(
+                            matched_client,
+                            {}
+                        )
+
+                        efiling_frame.efiling_username_var.set(
+                            client_data.get("itEfilingUname", "")
+                        )
+
+                        efiling_frame.efiling_password_var.set(
+                            client_data.get("itEfilingPword", "")
+                        )
+
+                        efiling_frame.auto_detect_zip()
 
                     messagebox.showinfo(
                         "Client Auto-Detected",
@@ -164,14 +184,18 @@ def main():
 
     bin_view_tab = BinViewFrame(notebook, excel_entry, None)
     tds_transfer_tab = TDSTransferFrame(notebook, excel_entry, None)
+    efiling_tab = EfilingFrame(notebook,excel_entry,None)
 
     # Give notebook access to frames
     bin_view_tab.notebook = notebook
     tds_transfer_tab.notebook = notebook
+    efiling_tab.notebook = notebook
 
     # Store frame references for later access
     frames_dict['bin_view'] = bin_view_tab
+    bin_view_tab.frames_dict = frames_dict
     frames_dict['tds_transfer'] = tds_transfer_tab
+    frames_dict['efiling'] = efiling_tab
 
     # Inject shared data storage
     bin_view_tab.month_amount_map = month_amount_map
@@ -179,6 +203,7 @@ def main():
 
     notebook.add(tds_transfer_tab, text='TDS Transfer Tool')
     notebook.add(bin_view_tab, text='BIN View')
+    notebook.add(efiling_tab,text='eFiling')
 
 
     # Create Logs tab and log display frame
