@@ -18,10 +18,183 @@ class IncomeTaxLoginAutomation:
 
         self.driver = None
 
+
+    def enter_user_id(
+        self,
+        user_id
+    ):
+
+        try:
+
+            wait = WebDriverWait(self.driver, 15)
+
+            print("Entering User ID")
+
+            user_input = wait.until(
+                EC.presence_of_element_located(
+                    (
+                        By.ID,
+                        "panAdhaarUserId"
+                    )
+                )
+            )
+
+            user_input.clear()
+
+            user_input.send_keys(user_id)
+
+            time.sleep(0.5)
+
+            # Press ENTER
+            user_input.send_keys("\n")
+
+            print("✅ User ID submitted.")
+
+        except Exception as e:
+
+            print(f"❌ User ID error: {e}")
+
+    def enter_password(
+        self,
+        password,
+        max_retries=7
+    ):
+
+        try:
+
+            wait = WebDriverWait(self.driver, 15)
+
+            print("Checking secure access checkbox")
+
+            # =====================================================
+            # CHECKBOX
+            # =====================================================
+
+            checkbox = wait.until(
+                EC.element_to_be_clickable(
+                    (
+                        By.XPATH,
+                        "//label[contains(.,'Please confirm your secure access message')]"
+                    )
+                )
+            )
+
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});",
+                checkbox
+            )
+
+            time.sleep(0.5)
+
+            # Native click works better here
+            checkbox.click()
+
+            time.sleep(1)
+
+            print("✅ Checkbox checked.")
+
+            # =====================================================
+            # PASSWORD INPUT
+            # =====================================================
+
+            password_input = wait.until(
+                EC.presence_of_element_located(
+                    (
+                        By.ID,
+                        "loginPasswordField"
+                    )
+                )
+            )
+
+            password_input.clear()
+
+            password_input.send_keys(password)
+
+            time.sleep(0.5)
+
+            # =====================================================
+            # CONTINUE BUTTON
+            # =====================================================
+
+            continue_button = wait.until(
+                EC.element_to_be_clickable(
+                    (
+                        By.XPATH,
+                        "//button[contains(.,'Continue')]"
+                    )
+                )
+            )
+
+            # =====================================================
+            # RETRY LOOP
+            # =====================================================
+
+            for attempt in range(max_retries):
+
+                print(
+                    f"Password submit attempt: {attempt + 1}"
+                )
+
+                self.driver.execute_script(
+                    "arguments[0].click();",
+                    continue_button
+                )
+
+                time.sleep(2)
+
+                page_source = self.driver.page_source
+
+                # ===============================================
+                # WRONG PASSWORD
+                # ===============================================
+
+                if (
+                    "Invalid Password, Please retry"
+                    in page_source
+                ):
+
+                    raise Exception(
+                        "❌ Invalid password."
+                    )
+
+                # ===============================================
+                # REQUEST NOT AUTHENTICATED
+                # ===============================================
+
+                if (
+                    "Request is not authenticated"
+                    in page_source
+                ):
+
+                    print(
+                        "⚠️ Request not authenticated. Retrying..."
+                    )
+
+                    time.sleep(1)
+
+                    continue
+
+                # ===============================================
+                # SUCCESS
+                # ===============================================
+
+                print("✅ Password accepted.")
+
+                return True
+
+            raise Exception(
+                "❌ Max retries reached."
+            )
+
+        except Exception as e:
+
+            print(f"❌ Password error: {e}")
+
+            return False
+
     # =========================================================
     # GENERIC HELPERS
     # =========================================================
-
     def wait_for_loader_to_disappear(self, timeout=30):
 
         try:
@@ -43,6 +216,10 @@ class IncomeTaxLoginAutomation:
             print("✅ Loader disappeared.")
 
         except Exception:
+            timestamp = int(time.time())
+            self.driver.save_screenshot(
+                f"error_{timestamp}.png"
+            )
 
             print("⚠️ No loader detected or loader timeout.")
 
@@ -195,7 +372,6 @@ class IncomeTaxLoginAutomation:
     # =========================================================
     # BROWSER
     # =========================================================
-
     def start_browser(self):
 
         try:
@@ -230,6 +406,10 @@ class IncomeTaxLoginAutomation:
             print("✅ Portal opened successfully.")
 
         except Exception as e:
+            timestamp = int(time.time())
+            self.driver.save_screenshot(
+                f"error_{timestamp}.png"
+            )
 
             print(f"❌ Error: {e}")
 
@@ -244,7 +424,6 @@ class IncomeTaxLoginAutomation:
     # =========================================================
     # NAVIGATION
     # =========================================================
-
     def navigate_to_upload_section(self):
 
         try:
@@ -306,13 +485,16 @@ class IncomeTaxLoginAutomation:
             print("✅ Navigation completed.")
 
         except Exception as e:
+            timestamp = int(time.time())
+            self.driver.save_screenshot(
+                f"error_{timestamp}.png"
+            )
 
             print(f"❌ Navigation error: {e}")
 
     # =========================================================
     # MAIN TDS FLOW
     # =========================================================
-
     def attach_tds_zip(
         self,
         zip_path,
@@ -551,6 +733,11 @@ class IncomeTaxLoginAutomation:
 
         except Exception as e:
 
+            timestamp = int(time.time())
+            self.driver.save_screenshot(
+                f"error_{timestamp}.png"
+            )
+
             print(f"❌ Attach ZIP error: {e}")
 
 
@@ -559,6 +746,10 @@ if __name__ == "__main__":
     app = IncomeTaxLoginAutomation()
 
     app.start_browser()
+
+    app.enter_user_id("HYDG06231B")
+
+    app.enter_password("HYDG06231b*1")
 
     app.navigate_to_upload_section()
 
