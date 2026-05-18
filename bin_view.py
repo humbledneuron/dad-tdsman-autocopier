@@ -797,11 +797,43 @@ class BinViewFrame(Frame):
                     label.config(bg="#ffe6e6")  # light red
 
             if all_match:
+
                 self.print("✅ All amounts matched. Extracting automatically...")
+
+                # Extract BIN data
                 self.view_bin_data()
-                
-                # close the browser after extraction
+
+                # Close BIN browser
                 self.close_browser()
+
+                # ==========================================
+                # SWITCH TO eFILING TAB
+                # ==========================================
+
+                try:
+
+                    if hasattr(self, "frames_dict"):
+
+                        efiling_frame = self.frames_dict.get("efiling")
+
+                        if efiling_frame:
+
+                            # Switch notebook tab
+                            if hasattr(self, "notebook"):
+
+                                self.notebook.select(2)
+
+                            # Auto-start eFiling
+                            self.after(
+                                1000,
+                                efiling_frame.start_efiling_process
+                            )
+
+                except Exception as e:
+
+                    self.print(
+                        f"eFiling auto-start error: {e}"
+                    )
 
             else:
                 msg = "❌ Amount mismatch detected:\n\n" + "\n".join(mismatch_details)
